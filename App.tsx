@@ -23,6 +23,7 @@ const BASE_SYSTEM_INSTRUCTION = `
 You are myenglish.lk, a supportive English coach. Your goal is confidence, clarity, and correct grammar.
 Style: Friendly, calm, motivating. Never shame or criticize. Keep explanations simple. Use short sentences.
 Your tone should be professional yet encouraging.
+Language policy: Use ONLY English. If the user speaks or writes in a non-English language, do not switch languages. Politely encourage them to speak in English and ignore non-English content.
 `;
 
 // Fix for line 28: Removed 'extends Window' to avoid conflict with the already defined 'aistudio' property on the global Window interface.
@@ -35,27 +36,156 @@ interface CustomWindow {
 
 const App: React.FC = () => {
   // --- Core State ---
-  const [phase, setPhase] = useState<AppPhase>(AppPhase.WELCOME);
+  const [phase, setPhase] = useState<AppPhase>(() => {
+    const saved = localStorage.getItem('myenglish_phase');
+    return saved ? saved as AppPhase : AppPhase.WELCOME;
+  });
   const [activeTab, setActiveTab] = useState<'home' | 'learn' | 'practice' | 'progress'>('home');
   const [isLive, setIsLive] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
-  const [userLevel, setUserLevel] = useState<EnglishLevel | null>(null);
-  const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
+  const [userLevel, setUserLevel] = useState<EnglishLevel | null>(() => {
+    const saved = localStorage.getItem('myenglish_userLevel');
+    return saved ? saved as EnglishLevel : null;
+  });
+  const [learningPath, setLearningPath] = useState<LearningPath | null>(() => {
+    const saved = localStorage.getItem('myenglish_learningPath');
+    return saved ? saved as LearningPath : null;
+  });
   const [isThinking, setIsThinking] = useState(false);
   const [currentPersona, setCurrentPersona] = useState<AIPersona | null>(null);
   const [outputTranscription, setOutputTranscription] = useState('');
   const [inputTranscription, setInputTranscription] = useState('');
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [languageWarning, setLanguageWarning] = useState<string | null>(null);
+
+  // Heuristic English detector: considers text English if mostly ASCII or contains common English stopwords
+  const isLikelyEnglish = (text: string) => {
+    const t = (text || '').trim();
+    if (!t) return true;
+    const asciiCount = [...t].filter(ch => ch.charCodeAt(0) <= 127).length;
+    const ratio = asciiCount / t.length;
+    const lower = t.toLowerCase();
+    const stops = [' the ', ' and ', ' is ', ' are ', ' you ', ' i ', ' to ', ' a ', ' in ', ' of ', ' that ', ' it '];
+    const hasStop = stops.some(w => lower.includes(w) || lower.startsWith(w.trim() + ' '));
+    return ratio > 0.8 || hasStop;
+  };
+
+  useEffect(() => {
+    if (languageWarning) {
+      const t = setTimeout(() => setLanguageWarning(null), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [languageWarning]);
   
   // --- Gamification State ---
-  const [points, setPoints] = useState(1250);
-  const [streak, setStreak] = useState(12);
-  const [level, setLevel] = useState(4);
-  const [completedModules, setCompletedModules] = useState<string[]>(['m1']);
+  const [points, setPoints] = useState(() => {
+    const saved = localStorage.getItem('myenglish_points');
+    return saved ? parseInt(saved) : 1250;
+  });
+  const [streak, setStreak] = useState(() => {
+    const saved = localStorage.getItem('myenglish_streak');
+    return saved ? parseInt(saved) : 12;
+  });
+  const [level, setLevel] = useState(() => {
+    const saved = localStorage.getItem('myenglish_level');
+    return saved ? parseInt(saved) : 4;
+  });
+  const [completedModules, setCompletedModules] = useState<string[]>(() => {
+    const saved = localStorage.getItem('myenglish_completedModules');
+    return saved ? JSON.parse(saved) : ['m1'];
+  });
   const [filterType, setFilterType] = useState<string>('All');
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [moduleContent, setModuleContent] = useState<string>('');
   const [showModuleSession, setShowModuleSession] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  
+  // --- User Profile State ---
+  const [userName, setUserName] = useState(() => {
+    const saved = localStorage.getItem('myenglish_userName');
+    return saved || 'Sarah Johnson';
+  });
+  const [userEmail, setUserEmail] = useState(() => {
+    const saved = localStorage.getItem('myenglish_userEmail');
+    return saved || 'sarah.j@example.com';
+  });
+  const [learningGoal, setLearningGoal] = useState(() => {
+    const saved = localStorage.getItem('myenglish_learningGoal');
+    return saved || 'Professional Communication';
+  });
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(() => {
+    const saved = localStorage.getItem('myenglish_dailyGoalMinutes');
+    return saved ? parseInt(saved) : 20;
+  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    const saved = localStorage.getItem('myenglish_notificationsEnabled');
+    return saved ? saved === 'true' : true;
+  });
+
+  // --- Persist to localStorage ---
+  useEffect(() => {
+    localStorage.setItem('myenglish_phase', phase);
+  }, [phase]);
+
+  useEffect(() => {
+    if (userLevel) localStorage.setItem('myenglish_userLevel', userLevel);
+  }, [userLevel]);
+
+  useEffect(() => {
+    if (learningPath) localStorage.setItem('myenglish_learningPath', learningPath);
+  }, [learningPath]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_points', points.toString());
+  }, [points]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_streak', streak.toString());
+  }, [streak]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_level', level.toString());
+  }, [level]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_completedModules', JSON.stringify(completedModules));
+  }, [completedModules]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_userName', userName);
+  }, [userName]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_userEmail', userEmail);
+  }, [userEmail]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_learningGoal', learningGoal);
+  }, [learningGoal]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_dailyGoalMinutes', dailyGoalMinutes.toString());
+  }, [dailyGoalMinutes]);
+
+  useEffect(() => {
+    localStorage.setItem('myenglish_notificationsEnabled', notificationsEnabled.toString());
+  }, [notificationsEnabled]);
+
+  // --- Logout Function ---
+  const handleLogout = () => {
+    // Clear all localStorage data
+    localStorage.clear();
+    // Reset to welcome phase
+    setPhase(AppPhase.WELCOME);
+    setShowProfile(false);
+    // Reset user data
+    setUserLevel(null);
+    setLearningPath(null);
+    setPoints(1250);
+    setStreak(12);
+    setLevel(4);
+    setCompletedModules(['m1']);
+  };
 
   // --- Audio Refs ---
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -180,7 +310,12 @@ const App: React.FC = () => {
         setOutputTranscription(prev => (prev + " " + msg.serverContent!.outputTranscription!.text).slice(-500));
       }
       if (msg.serverContent?.inputTranscription) {
-        setInputTranscription(prev => (prev + " " + msg.serverContent!.inputTranscription!.text).slice(-500));
+        const incoming = msg.serverContent!.inputTranscription!.text;
+        if (isLikelyEnglish(incoming)) {
+          setInputTranscription(prev => (prev + " " + incoming).slice(-500));
+        } else {
+          setLanguageWarning('Non-English speech ignored. Please speak in English.');
+        }
       }
 
       // Interruption
@@ -222,10 +357,10 @@ const App: React.FC = () => {
     
     let instruction = BASE_SYSTEM_INSTRUCTION;
     if (currentPhase === AppPhase.ASSESSMENT) {
-      instruction += ` ASSESSMENT MODE: Ask ONLY this question: "${ASSESSMENT_QUESTIONS[qIdx].text}". Listen and observe for English proficiency level.`;
+      instruction += ` ASSESSMENT MODE: Ask ONLY this question: "${ASSESSMENT_QUESTIONS[qIdx].text}". Listen and observe for English proficiency level. Only respond in English. Ignore non-English input.`;
     } else if (currentPhase === AppPhase.LEARNING_SESSION && persona) {
       instruction += ` ROLEPLAY MODE: You are ${persona.name}, a ${persona.role}. Scenario: ${persona.scenario}. 
-      RULES: Stay in character. Respond naturally. Gently correct user grammar at the end of each turn.`;
+      RULES: Stay in character. Respond naturally. Only respond in English. If the user speaks another language, do not switch languages—politely ask them to speak English.`;
     }
 
     let sessionPromise: Promise<any>;
@@ -322,42 +457,48 @@ const App: React.FC = () => {
       - Give 3 clear examples
       - Ask the student to create their own sentence
       - Correct gently if needed
-      - Use voice to explain naturally`;
+      - Use voice to explain naturally
+      - Use ONLY English; ignore non-English input`;
     } else if (module.type === 'Vocabulary') {
       moduleInstruction += `\nVOCABULARY LESSON: Teach "${module.title}" at ${module.level} level.
       - Introduce 5-7 new words with meanings
       - Use each word in a sentence
       - Ask the student to use the words
       - Practice pronunciation together
-      - Make it interactive and fun`;
+      - Make it interactive and fun
+      - Use ONLY English; ignore non-English input`;
     } else if (module.type === 'Speaking') {
       moduleInstruction += `\nSPEAKING PRACTICE: "${module.title}" at ${module.level} level.
       - Create a natural conversation scenario
       - Encourage the student to speak freely
       - Give pronunciation feedback
       - Correct mistakes gently
-      - Build confidence through practice`;
+      - Build confidence through practice
+      - Use ONLY English; ignore non-English input`;
     } else if (module.type === 'Listening') {
       moduleInstruction += `\nLISTENING EXERCISE: "${module.title}" at ${module.level} level.
       - Tell a short story or dialogue
       - Ask comprehension questions
       - Repeat if needed
       - Check understanding
-      - Discuss what they heard`;
+      - Discuss what they heard
+      - Use ONLY English; ignore non-English input`;
     } else if (module.type === 'Reading') {
       moduleInstruction += `\nREADING LESSON: "${module.title}" at ${module.level} level.
       - Present a short text (read it aloud)
       - Ask about main ideas
       - Discuss vocabulary
       - Check comprehension
-      - Encourage questions`;
+      - Encourage questions
+      - Use ONLY English; ignore non-English input`;
     } else if (module.type === 'Writing') {
       moduleInstruction += `\nWRITING PRACTICE: "${module.title}" at ${module.level} level.
       - Explain the writing structure
       - Give a writing prompt
       - Listen to their ideas
       - Provide feedback
-      - Help organize thoughts`;
+      - Help organize thoughts
+      - Use ONLY English; ignore non-English input`;
     }
 
     await ensureApiKey();
@@ -431,14 +572,14 @@ const App: React.FC = () => {
   // --- UI Components ---
 
   const WelcomeView = () => (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center text-white relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4 sm:px-6 py-10 text-center text-white relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-50" />
-      <div className="relative z-10 flex flex-col items-center max-w-2xl">
+      <div className="relative z-10 flex flex-col items-center max-w-3xl w-full">
         <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl mb-8 transform hover:scale-110 transition-transform duration-500">
           <GraduationCap size={56} className="text-white" />
         </div>
-        <h1 className="text-6xl font-black mb-4 tracking-tighter">myenglish.lk</h1>
-        <p className="text-xl text-indigo-200 mb-12 font-medium opacity-90 leading-relaxed">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 tracking-tighter">myenglish.lk</h1>
+        <p className="text-lg sm:text-xl text-indigo-200 mb-12 font-medium opacity-90 leading-relaxed">
           Master English with your personal AI coach.<br />
           Experience real-time voice conversations and personalized learning.
         </p>
@@ -464,10 +605,10 @@ const App: React.FC = () => {
     const q = ASSESSMENT_QUESTIONS[currentQuestionIndex];
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
-        <header className="p-6 bg-white border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <header className="p-4 sm:p-6 bg-white border-b border-gray-100 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm font-bold text-indigo-600 uppercase tracking-widest">Question {q.id} of 5</span>
-            <div className="h-1.5 w-32 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 w-32 sm:w-40 md:w-48 bg-gray-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-indigo-600 transition-all duration-500" 
                 style={{ width: `${(q.id / 5) * 100}%` }} 
@@ -479,7 +620,7 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        <main className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-3xl mx-auto">
+  <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-8 text-center max-w-3xl mx-auto">
           <div className="mb-12">
             <span className="px-4 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4 inline-block">
               {q.focus}
@@ -508,8 +649,7 @@ const App: React.FC = () => {
             
             <button 
               onClick={nextAssessmentStep}
-              disabled={!isLive}
-              className="mt-8 px-12 py-4 bg-gray-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+              className="mt-8 px-12 py-4 bg-gray-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition-all active:scale-95"
             >
               Continue to Next Question
             </button>
@@ -526,9 +666,9 @@ const App: React.FC = () => {
   };
 
   const DashboardView = () => (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 flex">
       {/* Desktop Sidebar */}
-      <aside className="w-72 bg-white border-r border-gray-100 hidden lg:flex flex-col sticky top-0 h-screen p-6">
+      <aside className="w-72 bg-white/90 backdrop-blur-xl border-r border-slate-100 shadow-xl hidden lg:flex flex-col sticky top-0 h-screen p-6">
         <div className="flex items-center gap-3 mb-10">
           <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center shadow-lg">
             <GraduationCap className="text-white" size={24} />
@@ -546,8 +686,10 @@ const App: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as any)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all ${
-                activeTab === item.id ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold transition-all border ${
+                activeTab === item.id 
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-500' 
+                  : 'text-gray-600 hover:bg-slate-50 border-transparent'
               }`}
             >
               <item.icon size={20} />
@@ -557,7 +699,7 @@ const App: React.FC = () => {
         </nav>
 
         <div className="mt-auto space-y-4">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[2rem] p-6 text-white shadow-xl">
+          <div className="bg-gradient-to-br from-indigo-800 via-indigo-700 to-indigo-600 rounded-[2rem] p-6 text-white shadow-2xl shadow-indigo-200/50">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Flame size={20} />
@@ -569,7 +711,7 @@ const App: React.FC = () => {
             <button className="w-full py-2 bg-white text-indigo-600 rounded-xl text-xs font-bold shadow-lg shadow-black/10">Upgrade Now</button>
           </div>
           
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 transition-colors font-medium">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 transition-colors font-medium">
             <LogOut size={20} /> Log Out
           </button>
         </div>
@@ -577,7 +719,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-100 p-6 flex items-center justify-between sticky top-0 z-10 lg:static">
+        <header className="bg-white/90 backdrop-blur-xl border-b border-slate-100 p-6 flex items-center justify-between sticky top-0 z-10 lg:static shadow-sm">
           <div className="lg:hidden flex items-center gap-2">
              <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
                 <GraduationCap className="text-white" size={18} />
@@ -594,9 +736,12 @@ const App: React.FC = () => {
               <Award size={20} fill="currentColor" />
               <span className="font-black">{points} XP</span>
             </div>
-            <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden">
+            <button 
+              onClick={() => setShowProfile(true)}
+              className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden hover:bg-indigo-100 transition-all hover:scale-110"
+            >
                <User size={20} />
-            </div>
+            </button>
           </div>
         </header>
 
@@ -615,8 +760,15 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Profile Overlay */}
+      {showProfile && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+          <ProfileView />
+        </div>
+      )}
+
       {/* Mobile Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 lg:hidden flex justify-around p-4 z-20">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 lg:hidden flex justify-around p-4 z-20 shadow-2xl">
         {[
           { id: 'home', icon: Layout },
           { id: 'learn', icon: Book },
@@ -637,8 +789,8 @@ const App: React.FC = () => {
 
   const HomeContent = () => (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-indigo-600 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent" />
+      <div className="bg-gradient-to-br from-slate-900 via-indigo-800 to-indigo-600 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
           <div className="flex-1">
             <span className="text-xs font-bold bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest mb-6 inline-block">Recommended for You</span>
@@ -648,7 +800,7 @@ const App: React.FC = () => {
             </p>
             <button 
               onClick={() => startRoleplay(PERSONAS[1])}
-              className="px-8 py-4 bg-white text-indigo-600 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all active:scale-95 flex items-center gap-2"
+              className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all active:scale-95 flex items-center gap-2"
             >
               Start Session Now <Play size={20} fill="currentColor" />
             </button>
@@ -660,7 +812,7 @@ const App: React.FC = () => {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col">
+        <div className="bg-white/90 backdrop-blur-lg p-8 rounded-[2rem] shadow-xl border border-slate-100 flex flex-col">
           <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
             <BookOpen size={24} />
           </div>
@@ -674,7 +826,7 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col">
+        <div className="bg-white/90 backdrop-blur-lg p-8 rounded-[2rem] shadow-xl border border-slate-100 flex flex-col">
           <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-6">
             <Award size={24} />
           </div>
@@ -689,7 +841,7 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col">
+        <div className="bg-white/90 backdrop-blur-lg p-8 rounded-[2rem] shadow-xl border border-slate-100 flex flex-col">
           <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6">
             <Calendar size={24} />
           </div>
@@ -893,7 +1045,7 @@ const App: React.FC = () => {
 
   const LearningSessionView = () => (
     <div className="min-h-screen bg-slate-900 flex flex-col text-white">
-      <header className="p-6 bg-slate-900/50 backdrop-blur-xl border-b border-white/10 flex items-center justify-between sticky top-0 z-20">
+      <header className="p-4 sm:p-6 bg-slate-900/50 backdrop-blur-xl border-b border-white/10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => { stopAudio(); setPhase(AppPhase.DASHBOARD); }}
@@ -916,7 +1068,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col p-8 relative overflow-hidden">
+      <main className="flex-1 flex flex-col p-4 sm:p-8 relative overflow-hidden">
         <div className="max-w-4xl mx-auto w-full flex flex-col h-full gap-8">
           {/* Persona Display */}
           <div className="flex flex-col items-center">
@@ -933,7 +1085,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Conversation Visualization */}
-          <div className="flex-1 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-6 pr-0 sm:pr-4 px-2 pb-24 sm:pb-28 custom-scrollbar">
             {(inputTranscription || outputTranscription) ? (
               <div className="space-y-4">
                  {inputTranscription && (
@@ -966,13 +1118,13 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Controls Overlay */}
-        <div className="absolute bottom-8 left-0 right-0 px-8 flex justify-center">
-           <div className="bg-slate-800/80 backdrop-blur-2xl border border-white/10 p-4 rounded-full flex items-center gap-6 shadow-2xl">
+          {/* Controls Bar */}
+          <div className="sticky bottom-0 left-0 right-0 px-4 sm:px-8 pb-4 sm:pb-8 bg-gradient-to-t from-slate-900/40 to-transparent flex justify-center z-10">
+             <div className="bg-slate-800/80 backdrop-blur-2xl border border-white/10 p-4 rounded-2xl sm:rounded-full flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-2xl w-full max-w-2xl">
              <button 
                 onClick={() => startRoleplay(currentPersona!)}
                 disabled={isLive}
-                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
                   isLive ? 'bg-gray-600 cursor-not-allowed' : 'bg-indigo-600 shadow-indigo-500/30 hover:bg-indigo-700'
                 }`}
               >
@@ -982,19 +1134,22 @@ const App: React.FC = () => {
              <button 
                 onClick={stopAudio}
                 disabled={!isLive}
-                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
                   !isLive ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-500 shadow-red-500/30 hover:bg-red-600'
                 }`}
               >
                <MicOff size={28} />
              </button>
              
-             <div className="pr-6">
+             <div className="pr-0 sm:pr-6 text-center sm:text-left">
                 <p className="text-sm font-bold text-white mb-0.5">{isLive ? 'Live Session Active' : 'Session Paused'}</p>
                 <div className="flex items-center gap-1.5">
                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{isLive ? 'AI Listening' : 'Click Mic to Start'}</span>
                 </div>
+               {languageWarning && (
+                <p className="text-[11px] font-medium text-red-400 mt-2">{languageWarning}</p>
+               )}
              </div>
            </div>
         </div>
@@ -1098,6 +1253,194 @@ const App: React.FC = () => {
          >
            Access My Dashboard <CheckCircle size={28} />
          </button>
+      </div>
+    </div>
+  );
+
+  const ProfileView = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setShowProfile(false)}
+                  className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all"
+                >
+                  <ArrowRight size={24} className="rotate-180" />
+                </button>
+                <div>
+                  <h1 className="text-3xl font-black text-gray-900">Profile & Settings</h1>
+                  <p className="text-gray-500">Manage your account and preferences</p>
+                </div>
+              </div>
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <User size={40} className="text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Information */}
+          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <User size={24} className="text-indigo-600" />
+              Personal Information
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  placeholder="Enter your name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Current Level</label>
+                <div className="px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl font-bold text-indigo-700">
+                  {userLevel || 'Not assessed yet'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Learning Preferences */}
+          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Settings size={24} className="text-indigo-600" />
+              Learning Preferences
+            </h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Learning Goal</label>
+                <select
+                  value={learningGoal}
+                  onChange={(e) => setLearningGoal(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  <option>Professional Communication</option>
+                  <option>Academic English</option>
+                  <option>Travel & Tourism</option>
+                  <option>General Conversation</option>
+                  <option>Business English</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Daily Practice Goal: {dailyGoalMinutes} minutes
+                </label>
+                <input
+                  type="range"
+                  min="5"
+                  max="60"
+                  step="5"
+                  value={dailyGoalMinutes}
+                  onChange={(e) => setDailyGoalMinutes(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <span>5 min</span>
+                  <span>30 min</span>
+                  <span>60 min</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Calendar size={20} className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">Daily Reminders</p>
+                    <p className="text-sm text-gray-500">Get notified to practice</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                  className={`relative w-14 h-8 rounded-full transition-all ${
+                    notificationsEnabled ? 'bg-indigo-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      notificationsEnabled ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics */}
+          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <BarChart3 size={24} className="text-indigo-600" />
+              Your Stats
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl">
+                <Flame size={32} className="text-orange-500 mb-2" />
+                <p className="text-3xl font-black text-orange-700">{streak}</p>
+                <p className="text-sm font-medium text-orange-600">Day Streak</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-2xl">
+                <Award size={32} className="text-yellow-500 mb-2" />
+                <p className="text-3xl font-black text-yellow-700">{points}</p>
+                <p className="text-sm font-medium text-yellow-600">Total XP</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl">
+                <CheckCircle2 size={32} className="text-green-500 mb-2" />
+                <p className="text-3xl font-black text-green-700">{completedModules.length}</p>
+                <p className="text-sm font-medium text-green-600">Completed</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-2xl">
+                <TrendingUp size={32} className="text-indigo-500 mb-2" />
+                <p className="text-3xl font-black text-indigo-700">{level}</p>
+                <p className="text-sm font-medium text-indigo-600">Level</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setShowProfile(false)}
+              className="py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={handleLogout}
+              className="py-4 bg-red-50 text-red-600 rounded-2xl font-bold text-lg shadow-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+            >
+              <LogOut size={20} />
+              Log Out
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
