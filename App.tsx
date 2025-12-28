@@ -53,6 +53,9 @@ const App: React.FC = () => {
   const [level, setLevel] = useState(4);
   const [completedModules, setCompletedModules] = useState<string[]>(['m1']);
   const [filterType, setFilterType] = useState<string>('All');
+  const [currentModule, setCurrentModule] = useState<Module | null>(null);
+  const [moduleContent, setModuleContent] = useState<string>('');
+  const [showModuleSession, setShowModuleSession] = useState(false);
 
   // --- Audio Refs ---
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -102,6 +105,24 @@ const App: React.FC = () => {
       sessionRef.current = null;
     }
     setConnectionError(null);
+  };
+
+  const playAudio = async (audioData: string) => {
+    if (!outAudioContextRef.current) return;
+    const outCtx = outAudioContextRef.current;
+    nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
+    try {
+      const buffer = await decodeAudioData(decode(audioData), outCtx, 24000, 1);
+      const source = outCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(outCtx.destination);
+      source.start(nextStartTimeRef.current);
+      nextStartTimeRef.current += buffer.duration;
+      sourcesRef.current.add(source);
+      source.onended = () => sourcesRef.current.delete(source);
+    } catch (e) {
+      console.error("Audio playback error:", e);
+    }
   };
 
   const createLiveCallbacks = (getSessionPromise: () => Promise<any>) => ({
@@ -285,6 +306,128 @@ const App: React.FC = () => {
     connectSession(AppPhase.LEARNING_SESSION, 0, persona);
   };
 
+  const startModuleLearning = async (module: Module) => {
+    setCurrentModule(module);
+    setShowModuleSession(true);
+    setOutputTranscription('');
+    setInputTranscription('');
+    setModuleContent('');
+    
+    // Generate AI instruction based on module type
+    let moduleInstruction = BASE_SYSTEM_INSTRUCTION;
+    
+    if (module.type === 'Grammar') {
+      moduleInstruction += `\nGRAMMAR LESSON: Teach "${module.title}" at ${module.level} level. 
+      - Start with a simple explanation
+      - Give 3 clear examples
+      - Ask the student to create their own sentence
+      - Correct gently if needed
+      - Use voice to explain naturally`;
+    } else if (module.type === 'Vocabulary') {
+      moduleInstruction += `\nVOCABULARY LESSON: Teach "${module.title}" at ${module.level} level.
+      - Introduce 5-7 new words with meanings
+      - Use each word in a sentence
+      - Ask the student to use the words
+      - Practice pronunciation together
+      - Make it interactive and fun`;
+    } else if (module.type === 'Speaking') {
+      moduleInstruction += `\nSPEAKING PRACTICE: "${module.title}" at ${module.level} level.
+      - Create a natural conversation scenario
+      - Encourage the student to speak freely
+      - Give pronunciation feedback
+      - Correct mistakes gently
+      - Build confidence through practice`;
+    } else if (module.type === 'Listening') {
+      moduleInstruction += `\nLISTENING EXERCISE: "${module.title}" at ${module.level} level.
+      - Tell a short story or dialogue
+      - Ask comprehension questions
+      - Repeat if needed
+      - Check understanding
+      - Discuss what they heard`;
+    } else if (module.type === 'Reading') {
+      moduleInstruction += `\nREADING LESSON: "${module.title}" at ${module.level} level.
+      - Present a short text (read it aloud)
+      - Ask about main ideas
+      - Discuss vocabulary
+      - Check comprehension
+      - Encourage questions`;
+    } else if (module.type === 'Writing') {
+      moduleInstruction += `\nWRITING PRACTICE: "${module.title}" at ${module.level} level.
+      - Explain the writing structure
+      - Give a writing prompt
+      - Listen to their ideas
+      - Provide feedback
+      - Help organize thoughts`;
+    }
+
+    await ensureApiKey();
+    await initAudio();
+    
+    // Create a temporary persona for the module
+    const modulePersona: AIPersona = {
+      name: 'Teacher Emma',
+      gender: 'female',
+      role: `${module.type} Instructor`,
+      personality: 'patient and encouraging',
+      style: 'normal',
+      voice: 'Kore',
+      scenario: module.title
+    };
+    
+    setCurrentPersona(modulePersona);
+    
+    // Start AI session with module-specific instruction
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+    
+    try {
+      const session = await ai.models.generateLiveContent({
+        model: MODEL_NAME,
+        config: {
+          responseModalities: [Modality.AUDIO],
+          systemInstructions: [{ text: moduleInstruction }],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: modulePersona.voice } } },
+        }
+      });
+
+      sessionRef.current = session;
+      setIsLive(true);
+
+      // Send initial greeting
+      await session.send({
+        text: `Start teaching ${module.title}. Begin with a warm greeting and brief introduction.`
+      });
+
+      // Handle responses
+      for await (const msg of session.messages()) {
+        if (msg.type === Type.SERVER_CONTENT) {
+          const serverMsg = msg as LiveServerMessage;
+          if (serverMsg.serverContent?.modelTurn?.parts) {
+            for (const part of serverMsg.serverContent.modelTurn.parts) {
+              if (part.text) {
+                setModuleContent(prev => prev + part.text + ' ');
+              }
+              if (part.inlineData?.data) {
+                const decoded = decode(part.inlineData.data);
+                await playAudio(decoded);
+              }
+            }
+          }
+        }
+        if (msg.type === Type.TOOL_CALL) {
+          setIsThinking(true);
+        }
+        if (msg.type === Type.TOOL_CALL_CANCELLATION || msg.type === Type.CONTENT) {
+          setIsThinking(false);
+        }
+      }
+    } catch (e: any) {
+      console.error("Module session error:", e);
+      const errorMessage = e?.message || "Unable to start lesson. Please try again.";
+      setConnectionError(errorMessage);
+      setShowModuleSession(false);
+    }
+  };
+
   // --- UI Components ---
 
   const WelcomeView = () => (
@@ -465,6 +608,13 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Module Learning Overlay */}
+      {showModuleSession && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+          <ModuleLearningView />
+        </div>
+      )}
+
       {/* Mobile Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 lg:hidden flex justify-around p-4 z-20">
         {[
@@ -620,13 +770,16 @@ const App: React.FC = () => {
                  <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-400">{module.progress}% Complete</span>
                  </div>
-                 <button className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold group-hover:gradient-bg transition-all shadow-lg shadow-gray-200">
+                 <button 
+                   onClick={() => startModuleLearning(module)}
+                   className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold group-hover:gradient-bg transition-all shadow-lg shadow-gray-200 hover:scale-105 active:scale-95"
+                 >
                     {module.progress === 100 ? 'Review' : module.progress > 0 ? 'Continue' : 'Start'}
                  </button>
               </div>
             </div>
           </div>
-        )} : (
+        )) : (
           <div className="col-span-full text-center py-20">
             <p className="text-gray-500 text-lg">No modules found in this category.</p>
           </div>
@@ -932,6 +1085,169 @@ const App: React.FC = () => {
          >
            Access My Dashboard <CheckCircle size={28} />
          </button>
+      </div>
+    </div>
+  );
+
+  const ModuleLearningView = () => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => {
+                  stopAudio();
+                  setShowModuleSession(false);
+                  setCurrentModule(null);
+                }}
+                className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all"
+              >
+                <ArrowRight size={24} className="rotate-180" />
+              </button>
+              <div>
+                <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{currentModule?.type} Lesson</span>
+                <h1 className="text-3xl font-black text-gray-900">{currentModule?.title}</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold">
+                {currentModule?.level}
+              </div>
+              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                {currentModule?.type === 'Grammar' && <Book size={24} />}
+                {currentModule?.type === 'Vocabulary' && <Sparkles size={24} />}
+                {currentModule?.type === 'Speaking' && <Mic size={24} />}
+                {currentModule?.type === 'Listening' && <Headphones size={24} />}
+                {currentModule?.type === 'Reading' && <BookOpen size={24} />}
+                {currentModule?.type === 'Writing' && <FileText size={24} />}
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                style={{ width: `${currentModule?.progress || 0}%` }}
+              />
+            </div>
+            <span className="text-sm font-bold text-gray-600">{currentModule?.progress}%</span>
+          </div>
+        </div>
+
+        {/* AI Teacher Card */}
+        <div className="bg-white rounded-[2.5rem] shadow-xl p-10 mb-6 border border-indigo-100">
+          <div className="flex items-center gap-6 mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <User size={40} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{currentPersona?.name}</h3>
+              <p className="text-gray-500">{currentPersona?.role}</p>
+            </div>
+            <button
+              onClick={() => {
+                if (isLive) stopAudio();
+                else startModuleLearning(currentModule!);
+              }}
+              className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all hover:scale-110 ${
+                isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'
+              }`}
+            >
+              {isLive ? <MicOff size={28} className="text-white" /> : <Mic size={28} className="text-white" />}
+            </button>
+          </div>
+
+          {/* Lesson Content */}
+          <div className="bg-indigo-50 rounded-2xl p-6 min-h-[300px] max-h-[500px] overflow-y-auto">
+            {moduleContent ? (
+              <div className="prose prose-lg max-w-none">
+                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{moduleContent}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                  <MessageSquare size={32} className="text-indigo-500" />
+                </div>
+                <p className="text-gray-500 font-medium">Click the microphone to start your AI lesson</p>
+                <p className="text-sm text-gray-400 mt-2">Your AI teacher will guide you through {currentModule?.title}</p>
+              </div>
+            )}
+            
+            {isThinking && (
+              <div className="flex items-center gap-2 mt-4 text-indigo-600">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="text-sm font-medium ml-2">Teacher is thinking...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Input Transcription */}
+          {inputTranscription && (
+            <div className="mt-6 bg-gray-50 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <User size={20} className="text-gray-600" />
+                <span className="text-sm font-bold text-gray-700">You said:</span>
+              </div>
+              <p className="text-gray-800">{inputTranscription}</p>
+            </div>
+          )}
+
+          {/* Connection Error */}
+          {connectionError && (
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle size={24} className="text-red-500" />
+                <div className="flex-1">
+                  <p className="text-red-800 font-medium">{connectionError}</p>
+                  <button 
+                    onClick={() => {
+                      setConnectionError(null);
+                      startModuleLearning(currentModule!);
+                    }}
+                    className="text-red-600 text-sm font-bold mt-2 hover:underline"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => {
+              if (!completedModules.includes(currentModule!.id)) {
+                setCompletedModules([...completedModules, currentModule!.id]);
+                setPoints(points + 50);
+              }
+              stopAudio();
+              setShowModuleSession(false);
+              setCurrentModule(null);
+            }}
+            className="py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2"
+          >
+            <CheckCircle2 size={24} />
+            Complete Lesson
+          </button>
+          <button
+            onClick={() => {
+              stopAudio();
+              setShowModuleSession(false);
+              setCurrentModule(null);
+            }}
+            className="py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg shadow-sm hover:bg-gray-200 transition-all"
+          >
+            Save & Exit
+          </button>
+        </div>
       </div>
     </div>
   );
