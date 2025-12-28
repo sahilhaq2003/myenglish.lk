@@ -970,10 +970,23 @@ const App: React.FC = () => {
         <div className="absolute bottom-8 left-0 right-0 px-8 flex justify-center">
            <div className="bg-slate-800/80 backdrop-blur-2xl border border-white/10 p-4 rounded-full flex items-center gap-6 shadow-2xl">
              <button 
-                onClick={isLive ? stopAudio : () => startRoleplay(currentPersona!)}
-                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${isLive ? 'bg-red-500 rotate-180 shadow-red-500/30' : 'bg-indigo-600 shadow-indigo-500/30'}`}
+                onClick={() => startRoleplay(currentPersona!)}
+                disabled={isLive}
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
+                  isLive ? 'bg-gray-600 cursor-not-allowed' : 'bg-indigo-600 shadow-indigo-500/30 hover:bg-indigo-700'
+                }`}
               >
-               {isLive ? <MicOff size={28} /> : <Mic size={28} />}
+               <Mic size={28} />
+             </button>
+             
+             <button 
+                onClick={stopAudio}
+                disabled={!isLive}
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-90 ${
+                  !isLive ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-500 shadow-red-500/30 hover:bg-red-600'
+                }`}
+              >
+               <MicOff size={28} />
              </button>
              
              <div className="pr-6">
@@ -1148,17 +1161,30 @@ const App: React.FC = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-1">{currentPersona?.name}</h3>
               <p className="text-gray-500">{currentPersona?.role}</p>
             </div>
-            <button
-              onClick={() => {
-                if (isLive) stopAudio();
-                else startModuleLearning(currentModule!);
-              }}
-              className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all hover:scale-110 ${
-                isLive ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'
-              }`}
-            >
-              {isLive ? <MicOff size={28} className="text-white" /> : <Mic size={28} className="text-white" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => startModuleLearning(currentModule!)}
+                disabled={isLive}
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${
+                  isLive 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-gradient-to-br from-green-500 to-emerald-600 hover:scale-110 hover:from-green-600 hover:to-emerald-700'
+                }`}
+              >
+                <Mic size={28} className="text-white" />
+              </button>
+              <button
+                onClick={() => stopAudio()}
+                disabled={!isLive}
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${
+                  !isLive 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-red-500 hover:scale-110 hover:bg-red-600'
+                }`}
+              >
+                <MicOff size={28} className="text-white" />
+              </button>
+            </div>
           </div>
 
           {/* Lesson Content */}
