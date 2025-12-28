@@ -1,0 +1,7 @@
+{
+  "name": "myenglish.lk ",
+  "description": "An interactive, voice-powered English learning platform that assesses your level and creates personalized learning roadmaps using Gemini Live.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
