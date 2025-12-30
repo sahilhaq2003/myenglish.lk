@@ -1,0 +1,409 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ============================================
+   DESIGN TOKENS - MyEnglish.lk Theme System
+   Professional, Accessible, Harmonized Colors
+   ============================================ */
+
+:root {
+    /* ===== SPACING SYSTEM (8px base) ===== */
+    --space-1: 0.25rem;
+    /* 4px */
+    --space-2: 0.5rem;
+    /* 8px */
+    --space-3: 0.75rem;
+    /* 12px */
+    --space-4: 1rem;
+    /* 16px */
+    --space-5: 1.25rem;
+    /* 20px */
+    --space-6: 1.5rem;
+    /* 24px */
+    --space-8: 2rem;
+    /* 32px */
+    --space-10: 2.5rem;
+    /* 40px */
+    --space-12: 3rem;
+    /* 48px */
+    --space-16: 4rem;
+    /* 64px */
+    --space-20: 5rem;
+    /* 80px */
+    --space-24: 6rem;
+    /* 96px */
+
+    /* ===== TYPOGRAPHY SCALE ===== */
+    --font-xs: 0.75rem;
+    /* 12px */
+    --font-sm: 0.875rem;
+    /* 14px */
+    --font-base: 1rem;
+    /* 16px */
+    --font-lg: 1.125rem;
+    /* 18px */
+    --font-xl: 1.25rem;
+    /* 20px */
+    --font-2xl: 1.5rem;
+    /* 24px */
+    --font-3xl: 1.875rem;
+    /* 30px */
+    --font-4xl: 2.25rem;
+    /* 36px */
+    --font-5xl: 3rem;
+    /* 48px */
+    --font-6xl: 3.75rem;
+    /* 60px */
+    --font-7xl: 4.5rem;
+    /* 72px */
+
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+
+    --letter-spacing-tight: -0.025em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.025em;
+
+    /* ===== BORDER RADIUS ===== */
+    --radius-sm: 0.5rem;
+    /* 8px */
+    --radius-md: 0.75rem;
+    /* 12px */
+    --radius-lg: 1rem;
+    /* 16px */
+    --radius-xl: 1.5rem;
+    /* 24px */
+    --radius-2xl: 2rem;
+    /* 32px */
+    --radius-full: 9999px;
+
+    /* ===== SHADOWS ===== */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+    /* ===== LIGHT MODE COLORS ===== */
+    /* Backgrounds - Soft, not pure white */
+    --background: 210 20% 98%;
+    /* #F7F9FB - Soft blue-tinted white */
+    --foreground: 215 25% 15%;
+    /* #1E2532 - Charcoal, not pure black */
+
+    /* Primary Brand - Professional Indigo */
+    --primary: 238 77% 58%;
+    /* #6366F1 - Indigo 500 */
+    --primary-foreground: 0 0% 100%;
+    /* White text on primary */
+    --primary-hover: 238 77% 52%;
+    /* Slightly darker on hover */
+
+    /* Secondary - Success Green */
+    --secondary: 142 76% 36%;
+    /* #10B981 - Emerald 500 */
+    --secondary-foreground: 0 0% 100%;
+    /* White text on secondary */
+    --secondary-hover: 142 76% 30%;
+    /* Darker on hover */
+
+    /* Accent - Warm Orange */
+    --accent: 38 92% 50%;
+    /* #F59E0B - Amber 500 */
+    --accent-foreground: 0 0% 100%;
+    /* White text on accent */
+
+    /* Cards & Surfaces - Elevated white */
+    --card: 0 0% 100%;
+    /* Pure white for cards */
+    --card-foreground: 215 25% 15%;
+    /* Charcoal text */
+
+    /* Muted/Secondary Backgrounds */
+    --muted: 210 20% 95%;
+    /* #EFF3F6 - Light gray-blue */
+    --muted-foreground: 215 15% 45%;
+    /* #6B7280 - Medium gray */
+
+    /* Borders - Subtle */
+    --border: 214 20% 88%;
+    /* #DDE4EA - Light border */
+    --input: 214 20% 88%;
+    /* Same as border */
+    --ring: 238 77% 58%;
+    /* Primary color for focus rings */
+
+    /* Destructive/Error */
+    --destructive: 0 84% 60%;
+    /* #EF4444 - Red 500 */
+    --destructive-foreground: 0 0% 100%;
+    /* White text */
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+}
+
+.dark {
+    /* ===== DARK MODE COLORS ===== */
+    /* Backgrounds - Deep gray, not pure black */
+    --background: 222 47% 8%;
+    /* #0A0E1A - Very dark blue-gray */
+    --foreground: 210 20% 92%;
+    /* #E8ECEF - Off-white, not pure white */
+
+    /* Primary Brand - Slightly lighter for contrast */
+    --primary: 238 77% 65%;
+    /* #7C7FF1 - Lighter indigo for dark mode */
+    --primary-foreground: 222 47% 8%;
+    /* Dark background on primary */
+    --primary-hover: 238 77% 70%;
+    /* Even lighter on hover */
+
+    /* Secondary - Adjusted green */
+    --secondary: 142 76% 42%;
+    /* #14C795 - Brighter emerald */
+    --secondary-foreground: 222 47% 8%;
+    /* Dark text on secondary */
+    --secondary-hover: 142 76% 48%;
+    /* Brighter on hover */
+
+    /* Accent - Warm orange */
+    --accent: 38 92% 55%;
+    /* #F6A723 - Brighter amber */
+    --accent-foreground: 222 47% 8%;
+    /* Dark text on accent */
+
+    /* Cards & Surfaces - Elevated from background */
+    --card: 222 47% 11%;
+    /* #0F172A - Slate 900 */
+    --card-foreground: 210 20% 92%;
+    /* Off-white text */
+
+    /* Muted/Secondary Backgrounds */
+    --muted: 217 33% 17%;
+    /* #1E293B - Slate 800 */
+    --muted-foreground: 215 15% 65%;
+    /* #94A3B8 - Slate 400 */
+
+    /* Borders - Subtle in dark mode */
+    --border: 217 33% 20%;
+    /* #273548 - Slightly lighter than muted */
+    --input: 217 33% 20%;
+    /* Same as border */
+    --ring: 238 77% 65%;
+    /* Primary color for focus rings */
+
+    /* Destructive/Error */
+    --destructive: 0 84% 65%;
+    /* #F87171 - Lighter red for dark mode */
+    --destructive-foreground: 222 47% 8%;
+    /* Dark text */
+
+    /* Popover */
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 20% 92%;
+
+    /* ===== DARK MODE SHADOWS (with glow) ===== */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+* {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: var(--font-base);
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-normal);
+}
+
+/* ============================================
+   SMOOTH THEME TRANSITIONS
+   ============================================ */
+
+body,
+body * {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 250ms;
+}
+
+/* Disable transitions on theme change for instant switch */
+body.theme-transitioning,
+body.theme-transitioning * {
+    transition: none !important;
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    font-weight: 700;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+}
+
+h1 {
+    font-size: var(--font-5xl);
+}
+
+h2 {
+    font-size: var(--font-4xl);
+}
+
+h3 {
+    font-size: var(--font-3xl);
+}
+
+h4 {
+    font-size: var(--font-2xl);
+}
+
+h5 {
+    font-size: var(--font-xl);
+}
+
+h6 {
+    font-size: var(--font-lg);
+}
+
+p {
+    margin: 0;
+    line-height: var(--line-height-relaxed);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: var(--radius-sm);
+    border: 2px solid hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* ============================================
+   FOCUS STYLES (Accessibility)
+   ============================================ */
+
+*:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+/* ============================================
+   SELECTION COLORS
+   ============================================ */
+
+::selection {
+    background-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+}
+
+.dark ::selection {
+    background-color: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-balance {
+    text-wrap: balance;
+}
+
+.text-pretty {
+    text-wrap: pretty;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+}
