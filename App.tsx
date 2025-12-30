@@ -6,11 +6,7 @@ import {
   AIPersona, PERSONAS, MOCK_MODULES, Module
 } from './types';
 import { ThemeToggle } from './components/ThemeToggle';
-import { HomePage } from './components/HomePage';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { CoursesPage } from './components/CoursesPage';
-import { SpeakingPage } from './components/SpeakingPage';
+
 import { decode, decodeAudioData, createBlob } from './utils/audio';
 import { getLessonContent, LessonContent } from './lessons';
 import {
@@ -65,6 +61,12 @@ const DEFAULT_LEARNING_PATH: LearningPath = {
 const BASE_SYSTEM_INSTRUCTION = `
 You are myenglish.lk, a supportive English coach. Your goal is confidence, clarity, and correct grammar.
 
+AUDIO & INTERACTION RULES:
+- IGNORE background noise.
+- Only stop speaking if the user clearly interrupts with words.
+- If the user is silent or just making noise, CONTINUE speaking your full response.
+- Do NOT stop mid-sentence.
+
 RESPONSE STYLE:
 - Keep responses SHORT and CONCISE (2-3 sentences max unless teaching)
 - Speak naturally and conversationally
@@ -75,8 +77,9 @@ RESPONSE STYLE:
 
 CONVERSATION FLOW:
 - Listen actively and respond immediately
-- Ask follow-up questions to keep conversation flowing
-- Give specific, actionable feedback
+- Do not feel the need to ask a question at the end of every turn
+- Allow the user to absorb the information
+- Only ask a question if it is necessary for the specific exercise
 - Celebrate progress with genuine enthusiasm
 
 LANGUAGE POLICY:
@@ -291,6 +294,8 @@ const App: React.FC = () => {
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const sessionRef = useRef<any>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const isAiSpeakingRef = useRef(false);
+  const transcriptionContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Initialization & API Key Guard ---
   const ensureApiKey = async () => {
@@ -337,6 +342,7 @@ const App: React.FC = () => {
   const playAudio = async (audioData: string) => {
     if (!outAudioContextRef.current) return;
     const outCtx = outAudioContextRef.current;
+    if (outCtx.state === 'suspended') await outCtx.resume();
     nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
     try {
       const buffer = await decodeAudioData(decode(audioData), outCtx, 24000, 1);
@@ -357,13 +363,23 @@ const App: React.FC = () => {
       setIsLive(true);
       setConnectionError(null);
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 16000,
+            channelCount: 1
+          }
+        });
         await initAudio();
         const source = audioContextRef.current!.createMediaStreamSource(stream);
-        const processor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
+        const processor = audioContextRef.current!.createScriptProcessor(1024, 1, 1);
         scriptProcessorRef.current = processor;
-
         processor.onaudioprocess = (e) => {
+          // Prevent barge-in interruptions: Ignore input until AI finishes its ENTIRE turn
+          if (isAiSpeakingRef.current) return;
+
           const inputData = e.inputBuffer.getChannelData(0);
           const pcmBlob = createBlob(inputData);
           getSessionPromise().then(session => {
@@ -384,32 +400,20 @@ const App: React.FC = () => {
     },
     onmessage: async (msg: LiveServerMessage) => {
       // Audio Output handling
-      if (msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data && outAudioContextRef.current) {
-        const outCtx = outAudioContextRef.current;
+      if (msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
+        isAiSpeakingRef.current = true; // AI is speaking
         const audioBase64 = msg.serverContent.modelTurn.parts[0].inlineData.data;
-        nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
-        try {
-          const buffer = await decodeAudioData(decode(audioBase64), outCtx, 24000, 1);
-          const source = outCtx.createBufferSource();
-          source.buffer = buffer;
-          source.connect(outCtx.destination);
-          source.start(nextStartTimeRef.current);
-          nextStartTimeRef.current += buffer.duration;
-          sourcesRef.current.add(source);
-          source.onended = () => sourcesRef.current.delete(source);
-        } catch (e) {
-          console.error("Audio decoding error:", e);
-        }
+        await playAudio(audioBase64);
       }
 
       // Transcriptions
       if (msg.serverContent?.outputTranscription) {
-        setOutputTranscription(prev => (prev + " " + msg.serverContent!.outputTranscription!.text).slice(-500));
+        setOutputTranscription(prev => (prev + " " + msg.serverContent!.outputTranscription!.text).slice(-2000));
       }
       if (msg.serverContent?.inputTranscription) {
         const incoming = msg.serverContent!.inputTranscription!.text;
         if (isLikelyEnglish(incoming)) {
-          setInputTranscription(prev => (prev + " " + incoming).slice(-500));
+          setInputTranscription(prev => (prev + " " + incoming).slice(-2000));
         } else {
           setLanguageWarning('Non-English speech ignored. Please speak in English.');
         }
@@ -417,15 +421,23 @@ const App: React.FC = () => {
 
       // Interruption
       if (msg.serverContent?.interrupted) {
+        isAiSpeakingRef.current = false; // Reset on interruption
         for (const source of sourcesRef.current) try { source.stop(); } catch (e) { }
         sourcesRef.current.clear();
         nextStartTimeRef.current = 0;
       }
+
+      // Turn Complete
+      if (msg.serverContent?.turnComplete) {
+        isAiSpeakingRef.current = false; // Allow input again
+        setIsThinking(false);
+      }
     },
     onerror: async (e: any) => {
       setIsLive(false);
-      const errorMessage = e?.message || "A network error occurred. Please check your connection or API key.";
+      const errorMessage = e?.message || "Connection lost. Please try again.";
       setConnectionError(errorMessage);
+      console.error("Live API Error:", e);
 
       if (errorMessage.toLowerCase().includes("requested entity was not found")) {
         const aistudio = (window as unknown as CustomWindow).aistudio;
@@ -434,8 +446,17 @@ const App: React.FC = () => {
     },
     onclose: () => {
       setIsLive(false);
+      // Don't show error on normal close, but log it
+      console.log("Session closed");
     },
   });
+
+  // Auto-scroll transcription to bottom
+  useEffect(() => {
+    if (transcriptionContainerRef.current) {
+      transcriptionContainerRef.current.scrollTop = transcriptionContainerRef.current.scrollHeight;
+    }
+  }, [inputTranscription, outputTranscription]);
 
   // --- Logic Flows ---
 
@@ -451,7 +472,7 @@ const App: React.FC = () => {
     stopAudio();
     setConnectionError(null);
 
-    const apiKey = import.meta.env.VITE_API_KEY;
+    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file. Get your key from https://aistudio.google.com/apikey');
       return;
@@ -481,7 +502,7 @@ const App: React.FC = () => {
           },
           generationConfig: {
             temperature: 0.7,  // Balanced creativity and consistency
-            maxOutputTokens: 200,  // Shorter responses for faster delivery
+            maxOutputTokens: 8192,  // Maximized for longest possible responses
             topP: 0.9,
             topK: 40
           }
@@ -509,7 +530,7 @@ const App: React.FC = () => {
     setPhase(AppPhase.ANALYZING);
     setIsThinking(true);
 
-    const apiKey = import.meta.env.VITE_API_KEY;
+    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file.');
       setUserLevel(DEFAULT_LEARNING_PATH.level);
@@ -525,6 +546,7 @@ const App: React.FC = () => {
         model: 'gemini-3-pro-preview',
         contents: "Analyze the previous English assessment answers (simulated) and provide a professional English Level (Beginner to Advanced) and a 4-week roadmap.",
         config: {
+          maxOutputTokens: 8192,
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -594,7 +616,6 @@ GRAMMAR TEACHER PERSONA: You are Professor Alex, a friendly and patient grammar 
 - As soon as the session begins, introduce yourself and START the lesson
 - DO NOT wait for the student to speak first
 - Begin with your greeting and immediately start explaining the topic
-- Ask questions throughout to engage the student
 - Keep the conversation flowing - you are the teacher leading the lesson
 
 TEACHING STYLE:
@@ -659,8 +680,8 @@ COMMUNICATION RULES:
 - Speak naturally and conversationally (not like reading a textbook)
 - Use pauses for emphasis and clarity
 - Vary your tone to maintain engagement
-- Ask questions frequently to check understanding
-- Respond to student's emotions (confusion, excitement, frustration)
+- Don't overwhelm with questions; allow the student to process
+- Check understanding occasionally, but not constantly
 - Use ONLY English; if student speaks another language, gently redirect: "Let's practice in English together!"
 - Be patient with mistakes - they're learning opportunities!
 - Keep talking and teaching - silence means you should continue explaining
@@ -1139,7 +1160,7 @@ EXAMPLE OPENING:
     setCurrentPersona(modulePersona);
 
     // Start AI session with module-specific instruction
-    const apiKey = import.meta.env.VITE_API_KEY;
+    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file. Get your key from https://aistudio.google.com/apikey');
       setShowModuleSession(false);
@@ -1162,7 +1183,7 @@ EXAMPLE OPENING:
           },
           generationConfig: {
             temperature: 0.7,  // Balanced for teaching
-            maxOutputTokens: 300,  // Slightly longer for teaching explanations
+            maxOutputTokens: 1000,  // Increased to prevent cutoff
             topP: 0.9,
             topK: 40
           }
@@ -1720,7 +1741,7 @@ EXAMPLE OPENING:
 
         <div className="bg-card p-10 rounded-[2.5rem] shadow-sm border border-border flex flex-col items-center">
           <h3 className="font-bold text-xl text-gray-800 mb-8 self-start">Proficiency Radar</h3>
-          <div className="flex-1 w-full flex items-center justify-center">
+          <div className="flex-1 w-full flex items-center justify-center min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
                 { subject: 'Grammar', A: 70 }, { subject: 'Vocabulary', A: 85 },
@@ -1784,7 +1805,10 @@ EXAMPLE OPENING:
           </div>
 
           {/* Conversation Visualization */}
-          <div className="flex-1 overflow-y-auto space-y-6 pr-0 sm:pr-4 px-2 pb-24 sm:pb-28 custom-scrollbar">
+          <div
+            ref={transcriptionContainerRef}
+            className="flex-1 overflow-y-auto space-y-6 pr-0 sm:pr-4 px-2 pb-24 sm:pb-28 custom-scrollbar"
+          >
             {(inputTranscription || outputTranscription) ? (
               <div className="space-y-4">
                 {inputTranscription && (
@@ -2666,96 +2690,36 @@ EXAMPLE OPENING:
     // TODO: Implement course detail view
   };
 
-  // --- Render New Professional Pages ---
-  const renderNewPage = () => {
-    const isAuthenticated = phase !== AppPhase.WELCOME && userName !== '';
 
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header
-          isAuthenticated={isAuthenticated}
-          userName={userName}
-          onLogin={() => console.log('Login clicked')}
-          onSignup={handleGetStarted}
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-        />
-
-        <main className="flex-1">
-          {currentPage === 'home' && (
-            <HomePage
-              onGetStarted={handleGetStarted}
-              onExploreCourses={handleExploreCourses}
-            />
-          )}
-          {currentPage === 'courses' && (
-            <CoursesPage
-              onEnroll={handleEnrollCourse}
-              onCourseClick={handleCourseClick}
-            />
-          )}
-          {currentPage === 'speaking' && (
-            <SpeakingPage onGetStarted={handleGetStarted} />
-          )}
-          {currentPage === 'exam-prep' && (
-            <div className="py-20 text-center">
-              <h1 className="text-4xl font-bold mb-4">Exam Preparation</h1>
-              <p className="text-muted-foreground">Coming soon...</p>
-            </div>
-          )}
-          {currentPage === 'business-english' && (
-            <div className="py-20 text-center">
-              <h1 className="text-4xl font-bold mb-4">Business English</h1>
-              <p className="text-muted-foreground">Coming soon...</p>
-            </div>
-          )}
-          {currentPage === 'practice' && (
-            <div className="py-20 text-center">
-              <h1 className="text-4xl font-bold mb-4">Practice</h1>
-              <p className="text-muted-foreground">Coming soon...</p>
-            </div>
-          )}
-          {currentPage === 'community' && (
-            <div className="py-20 text-center">
-              <h1 className="text-4xl font-bold mb-4">Community</h1>
-              <p className="text-muted-foreground">Coming soon...</p>
-            </div>
-          )}
-        </main>
-
-        <Footer onNavigate={handleNavigate} />
-      </div>
-    );
-  };
 
   // --- Router ---
   // Show full-screen views (Assessment, Learning Session, Dashboard) without header/footer
   if (phase === AppPhase.ASSESSMENT) {
-    return <AssessmentView />;
+    return AssessmentView();
   }
 
   if (phase === AppPhase.ANALYZING) {
-    return <AnalyzingView />;
+    return AnalyzingView();
   }
 
   if (phase === AppPhase.RESULT) {
-    return <ResultView />;
+    return ResultView();
   }
 
   if (phase === AppPhase.PATH) {
-    return <RoadmapView />;
+    return RoadmapView();
   }
 
   if (phase === AppPhase.LEARNING_SESSION) {
-    return <LearningSessionView />;
+    return LearningSessionView();
   }
 
   if (phase === AppPhase.DASHBOARD) {
-    return <DashboardView />;
+    return DashboardView();
   }
 
-  // Show new professional pages with header/footer for marketing site
-  return renderNewPage();
+  // Default to Welcome View
+  return WelcomeView();
 };
 
 export default App;
