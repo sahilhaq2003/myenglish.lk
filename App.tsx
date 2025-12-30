@@ -21,7 +21,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area
 } from 'recharts';
 
-const MODEL_NAME = 'gemini-2.5-flash-native-audio-preview-09-2025';
+const MODEL_NAME = 'models/gemini-2.0-flash-exp';
 
 const DEFAULT_LEARNING_PATH: LearningPath = {
   level: EnglishLevel.INTERMEDIATE,
@@ -81,6 +81,8 @@ CONVERSATION FLOW:
 - Allow the user to absorb the information
 - Only ask a question if it is necessary for the specific exercise
 - Celebrate progress with genuine enthusiasm
+- CRITICAL: Never stop speaking in the middle of a sentence. valid JSON response.
+- If you are listing items, limit to 3 items maximum.
 
 LANGUAGE POLICY:
 - Use ONLY English
@@ -124,8 +126,16 @@ const App: React.FC = () => {
   });
   const [learningPath, setLearningPath] = useState<LearningPath | null>(() => {
     const saved = localStorage.getItem('myenglish_learningPath');
-    return saved ? saved as LearningPath : null;
+    try {
+      return saved ? JSON.parse(saved) as LearningPath : null;
+    } catch (e) {
+      return null;
+    }
   });
+
+  // --- Settings State ---
+  const [aiSpeakingRate, setAiSpeakingRate] = useState<'slow' | 'normal' | 'fast'>('normal');
+  const [showSettings, setShowSettings] = useState(false); // For the settings modal
   const [isThinking, setIsThinking] = useState(false);
   const [currentPersona, setCurrentPersona] = useState<AIPersona | null>(null);
   const [outputTranscription, setOutputTranscription] = useState('');
@@ -379,15 +389,25 @@ const App: React.FC = () => {
         processor.onaudioprocess = (e) => {
           // Prevent barge-in interruptions: Ignore input until AI finishes its ENTIRE turn
           if (isAiSpeakingRef.current) return;
+          // Guard against sending if stopped
+          if (!scriptProcessorRef.current) return;
 
           const inputData = e.inputBuffer.getChannelData(0);
           const pcmBlob = createBlob(inputData);
           getSessionPromise().then(session => {
-            if (session) {
-              session.sendRealtimeInput({ media: pcmBlob });
+            // Check carefully if session is open before sending
+            if (session && scriptProcessorRef.current) {
+              try {
+                // Only send if not closed
+                if (!session.closed) { // Hypothetical property, but try/catch catches it mostly
+                  session.sendRealtimeInput({ media: pcmBlob });
+                }
+              } catch (e) {
+                // Debug log only, suppress spam
+              }
             }
           }).catch(err => {
-            console.debug("Session not ready to receive input", err);
+            // Ignore session not ready errors in loop
           });
         };
 
@@ -408,7 +428,8 @@ const App: React.FC = () => {
 
       // Transcriptions
       if (msg.serverContent?.outputTranscription) {
-        setOutputTranscription(prev => (prev + " " + msg.serverContent!.outputTranscription!.text).slice(-2000));
+        // Direct append, let the UI handle wrapping. API sends partial chunks.
+        setOutputTranscription(prev => (prev + msg.serverContent!.outputTranscription!.text).slice(-2000));
       }
       if (msg.serverContent?.inputTranscription) {
         const incoming = msg.serverContent!.inputTranscription!.text;
@@ -446,15 +467,23 @@ const App: React.FC = () => {
     },
     onclose: () => {
       setIsLive(false);
-      // Don't show error on normal close, but log it
       console.log("Session closed");
+      stopAudio(); // Ensure cleanup happens when server closes connection
     },
   });
 
   // Auto-scroll transcription to bottom
   useEffect(() => {
     if (transcriptionContainerRef.current) {
-      transcriptionContainerRef.current.scrollTop = transcriptionContainerRef.current.scrollHeight;
+      // Ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        if (transcriptionContainerRef.current) {
+          transcriptionContainerRef.current.scrollTo({
+            top: transcriptionContainerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      });
     }
   }, [inputTranscription, outputTranscription]);
 
@@ -469,10 +498,21 @@ const App: React.FC = () => {
   };
 
   const connectSession = async (currentPhase: AppPhase, qIdx: number = 0, persona?: AIPersona) => {
+    // If we're already connected in the same phase, don't reconnect (unless it's the start)
+    // For Assessment, we use loose phase matching or just rely on sessionRef existance + send message logic
+    // But connectSession is general.
+
+    // Logic: If already live and same phase, return?
+    // But Assessment needs to send a new message.
+
+    // We will handle the "Stay Connected" logic in nextAssessmentStep. 
+    // connectSession will REMAIN a "force connect" function.
+    // So nextAssessmentStep will avoid calling this if possible.
+
     stopAudio();
     setConnectionError(null);
 
-    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
+    const apiKey = import.meta.env.VITE_API_KEY || '';
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file. Get your key from https://aistudio.google.com/apikey');
       return;
@@ -482,10 +522,29 @@ const App: React.FC = () => {
 
     let instruction = BASE_SYSTEM_INSTRUCTION;
     if (currentPhase === AppPhase.ASSESSMENT) {
-      instruction += ` ASSESSMENT MODE: Ask ONLY this question: "${ASSESSMENT_QUESTIONS[qIdx].text}". Listen and observe for English proficiency level. Only respond in English. Ignore non-English input.`;
+      // Generic instruction for persistent session
+      instruction += ` ASSESSMENT MODE: You are an English Examiner. I will provide you with specific questions to ask the user via system text commands. 
+      WHEN STARTING: Ask the first question: "${ASSESSMENT_QUESTIONS[0].text}".
+      SUBSEQUENT STEPS: When I send you a text command starting with "NEXT_QUESTION:", immediately ask that question friendly and naturally.
+      
+      INTERACTION FLOW:
+      1. ASK: Ask the specific question provided.
+      2. LISTEN: Wait for the user to answer.
+      3. GUIDE: After the user answers, give a SHORT, friendly acknowledgement (e.g., "Great explanation," "Thank you," "Got it"), and then CLEARLY say: "Please click the Next button to continue."
+      
+      RULES:
+      - Be warm, encouraging, and professional.
+      - "NEXT_QUESTION:" messages are from the SYSTEM, not the user. Ignore them as conversation, just follow the instruction.
+      `;
     } else if (currentPhase === AppPhase.LEARNING_SESSION && persona) {
       instruction += ` ROLEPLAY MODE: You are ${persona.name}, a ${persona.role}. Scenario: ${persona.scenario}. 
-      RULES: Stay in character. Respond naturally. Only respond in English. If the user speaks another language, do not switch languages—politely ask them to speak English.`;
+      RULES: Stay in character. Respond naturally. Only respond in English. If the user speaks another language, do not switch languages—politely ask them to speak English.
+      
+      SPEAKING STYLE GUIDELINES:
+      - Speed: ${aiSpeakingRate === 'normal' ? 'SLOW_AND_CLEAR' : aiSpeakingRate.toUpperCase()}
+      - Tone: ROBUST AND STEADY. Avoid fluctuating pitch (up and down). Keep your voice grounded and consistent. Do not sound too excited or "sing-songy".
+      - ${aiSpeakingRate === 'slow' ? 'Speak EXTREMELY SLOWLY. Pause significantly between every phrase. Articulate every syllable individually.' : aiSpeakingRate === 'fast' ? 'Speak at a standard conversational pace.' : 'Speak SLOWLY, STABLY, and clearly. Articulate every word distinctively. Maintain a consistent volume and pitch.'}
+      `;
     }
 
     let sessionPromise: Promise<any>;
@@ -495,17 +554,13 @@ const App: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: instruction,
-          outputAudioTranscription: {},
-          inputAudioTranscription: {},
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: persona?.voice || 'Kore' } }
           },
-          generationConfig: {
-            temperature: 0.7,  // Balanced creativity and consistency
-            maxOutputTokens: 8192,  // Maximized for longest possible responses
-            topP: 0.9,
-            topK: 40
-          }
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          topP: 0.9,
+          topK: 40
         },
         callbacks: createLiveCallbacks(() => sessionPromise)
       });
@@ -515,10 +570,26 @@ const App: React.FC = () => {
     }
   };
 
-  const nextAssessmentStep = () => {
+  const nextAssessmentStep = async () => {
     if (currentQuestionIndex < ASSESSMENT_QUESTIONS.length - 1) {
       const nextIdx = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIdx);
+
+      // FAST PATH: If session is already active, just send the next question as text
+      if (sessionRef.current && isLive) {
+        const nextQ = ASSESSMENT_QUESTIONS[nextIdx].text;
+        console.log("Sending next question via active session:", nextQ);
+        try {
+          // Send text to model to prompt the next question without reconnecting
+          await sessionRef.current.send({ parts: [{ text: `NEXT_QUESTION: ${nextQ}` }] });
+          return;
+        } catch (e) {
+          console.error("Failed to send next question, reconnecting...", e);
+          // Fall through to reconnect
+        }
+      }
+
+      // Fallback: Full Reconnect (Slower)
       connectSession(AppPhase.ASSESSMENT, nextIdx);
     } else {
       stopAudio();
@@ -530,7 +601,7 @@ const App: React.FC = () => {
     setPhase(AppPhase.ANALYZING);
     setIsThinking(true);
 
-    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
+    const apiKey = import.meta.env.VITE_API_KEY || '';
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file.');
       setUserLevel(DEFAULT_LEARNING_PATH.level);
@@ -635,7 +706,7 @@ TEACHING SEQUENCE (FOLLOW THIS EXACTLY):
    - Use everyday language, not technical jargon
    - Give a clear, memorable definition
    - Explain WHY this grammar matters in real conversations
-   - Speak for 30-60 seconds explaining the concept
+   - Keep the explanation CONCISE (max 3-4 sentences). Do NOT give a long lecture.
 
 3. VISUAL EXAMPLES: Provide 3-4 clear examples
    - Start with simple sentences
@@ -684,7 +755,10 @@ COMMUNICATION RULES:
 - Check understanding occasionally, but not constantly
 - Use ONLY English; if student speaks another language, gently redirect: "Let's practice in English together!"
 - Be patient with mistakes - they're learning opportunities!
-- Keep talking and teaching - silence means you should continue explaining
+- Be patient with mistakes - they're learning opportunities!
+- Keep talking and teaching, BUT keep turns short (under 20 seconds) to ensure you finish your sentences.
+- NEVER stop mid-sentence. If you have a lot to say, say the first part, then ask "Shall I continue?"
+- COMPLETENESS: Always finish your thought. Do not leave a sentence hanging.
 
 EXAMPLE OPENING (START WITH THIS):
 "Hi there! I'm Professor Alex, your grammar guide. Today's topic is ${module.title}, and I promise we'll make this crystal clear. Ready to dive in? Great! Let me start with a simple explanation... [then immediately begin explaining the grammar concept]"`;
@@ -1160,7 +1234,9 @@ EXAMPLE OPENING:
     setCurrentPersona(modulePersona);
 
     // Start AI session with module-specific instruction
-    const apiKey = "AIzaSyCQ4iLovLNqp2BCx1FJ_hOIE72I2IRSEPw"; // Hardcoded for fix
+    const apiKey = import.meta.env.VITE_API_KEY || '';
+    console.log("Debug: API Key loaded:", apiKey ? "Yes (Length: " + apiKey.length + ")" : "No");
+
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file. Get your key from https://aistudio.google.com/apikey');
       setShowModuleSession(false);
@@ -1181,12 +1257,10 @@ EXAMPLE OPENING:
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: modulePersona.voice } }
           },
-          generationConfig: {
-            temperature: 0.7,  // Balanced for teaching
-            maxOutputTokens: 1000,  // Increased to prevent cutoff
-            topP: 0.9,
-            topK: 40
-          }
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+          topP: 0.9,
+          topK: 40
         },
         callbacks: createLiveCallbacks(() => sessionPromise)
       });
@@ -1224,7 +1298,10 @@ EXAMPLE OPENING:
           >
             Get Started <ArrowRight size={20} />
           </button>
-          <button className="flex-1 bg-secondary border border-border hover:bg-muted text-secondary-foreground py-5 rounded-2xl font-bold text-lg transition-all">
+          <button
+            onClick={() => alert("Demo Mode: Please click 'Get Started' to interpret the app demo.")}
+            className="flex-1 bg-secondary border border-border hover:bg-muted text-secondary-foreground py-5 rounded-2xl font-bold text-lg transition-all"
+          >
             Sign In
           </button>
         </div>
@@ -1341,7 +1418,12 @@ EXAMPLE OPENING:
             </div>
             <h4 className="font-bold mb-1">Upgrade to Pro</h4>
             <p className="text-xs text-white/70 mb-4">Unlimited AI conversation and personalized grammar analysis.</p>
-            <button className="w-full py-2 bg-card text-primary rounded-xl text-xs font-bold shadow-lg shadow-black/10">Upgrade Now</button>
+            <button
+              onClick={() => alert("Pro features coming soon!")}
+              className="w-full py-2 bg-card text-primary rounded-xl text-xs font-bold shadow-lg shadow-black/10 hover:bg-white transition-colors"
+            >
+              Upgrade Now
+            </button>
           </div>
 
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 transition-colors font-medium">
@@ -1458,7 +1540,10 @@ EXAMPLE OPENING:
           <div className="w-full bg-gray-50 h-2 rounded-full overflow-hidden mb-4">
             <div className="h-full bg-blue-500" style={{ width: '45%' }} />
           </div>
-          <button className="text-blue-600 font-bold flex items-center gap-2 hover:gap-3 transition-all">
+          <button
+            onClick={() => setActiveTab('learn')}
+            className="text-blue-600 font-bold flex items-center gap-2 hover:gap-3 transition-all"
+          >
             Resume <ChevronRight size={18} />
           </button>
         </div>
@@ -1473,7 +1558,10 @@ EXAMPLE OPENING:
             {[1, 2, 3, 4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold">A{i}</div>)}
             <div className="w-10 h-10 rounded-full border-2 border-white bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">+12</div>
           </div>
-          <button className="text-purple-600 font-bold flex items-center gap-2 hover:gap-3 transition-all">
+          <button
+            onClick={() => setActiveTab('progress')}
+            className="text-purple-600 font-bold flex items-center gap-2 hover:gap-3 transition-all"
+          >
             View Leaderboard <ChevronRight size={18} />
           </button>
         </div>
@@ -1491,7 +1579,10 @@ EXAMPLE OPENING:
               </div>
             ))}
           </div>
-          <button className="text-orange-600 font-bold flex items-center gap-2 hover:gap-3 transition-all">
+          <button
+            onClick={() => setShowProfile(true)}
+            className="text-orange-600 font-bold flex items-center gap-2 hover:gap-3 transition-all"
+          >
             Set Reminders <ChevronRight size={18} />
           </button>
         </div>
@@ -1781,10 +1872,42 @@ EXAMPLE OPENING:
             <p className="text-xs text-muted-foreground font-medium">{currentPersona?.scenario}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="p-3 bg-secondary hover:bg-muted rounded-xl border border-border">
+        <div className="flex items-center gap-3 relative">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-3 rounded-xl border border-border transition-all ${showSettings ? 'bg-primary text-white' : 'bg-secondary hover:bg-muted'}`}>
             <Settings size={20} />
           </button>
+
+          {/* Settings Popover */}
+          {showSettings && (
+            <div className="absolute top-full right-0 mt-2 w-64 bg-card rounded-2xl border border-border shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+                    <MessageSquare size={14} /> AI Speaking Rate
+                  </h4>
+                  <div className="flex bg-muted p-1 rounded-lg">
+                    {(['slow', 'normal', 'fast'] as const).map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => {
+                          setAiSpeakingRate(rate);
+                          // Optionally reconnect if live to apply immediately, but for now user might need to restart
+                        }}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md capitalize transition-all ${aiSpeakingRate === rate ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                      >
+                        {rate}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 leading-tight">
+                    Note: Restart the session to apply changes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -1982,7 +2105,7 @@ EXAMPLE OPENING:
 
         <button
           onClick={() => setPhase(AppPhase.DASHBOARD)}
-          className="w-full mt-16 py-6 gradient-bg text-white rounded-[2.5rem] font-bold text-2xl shadow-2xl hover:scale-[1.01] transition-all flex items-center justify-center gap-4"
+          className="w-full mt-16 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[2.5rem] font-bold text-2xl shadow-2xl hover:scale-[1.01] transition-all flex items-center justify-center gap-4"
         >
           Access My Dashboard <CheckCircle size={28} />
         </button>
