@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, GraduationCap } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, GraduationCap } from 'lucide-react';
 
 export function Footer() {
     return (
@@ -66,15 +66,11 @@ export function Footer() {
                         <ul className="space-y-4">
                             <li className="flex items-start gap-3 text-muted-foreground">
                                 <Mail size={20} className="text-primary mt-1 shrink-0" />
-                                <span>support@myenglish.lk</span>
+                                <span>sahilhaq2003@gmail.com</span>
                             </li>
                             <li className="flex items-start gap-3 text-muted-foreground">
                                 <Phone size={20} className="text-primary mt-1 shrink-0" />
-                                <span>+94 11 234 5678</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-muted-foreground">
-                                <MapPin size={20} className="text-primary mt-1 shrink-0" />
-                                <span>123 Lotus Road, Colombo 03,<br />Sri Lanka</span>
+                                <span>0767589002</span>
                             </li>
                         </ul>
                     </div>

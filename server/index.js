@@ -9,6 +9,15 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Error handling for JSON parsing
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && 'body' in err) {
+        console.error('JSON Parse Error:', err.message);
+        return res.status(400).json({ message: 'Invalid JSON payload' });
+    }
+    next();
+});
+
 // Database Configuration
 const dbConfig = {
     host: 'database-1.ctaqimoaafgp.eu-north-1.rds.amazonaws.com',
@@ -77,6 +86,60 @@ function startServer() {
         }
     });
 
+
+    // Update or check users table for profile fields
+    // Verify and add missing columns individually to prevent failures if some exist
+    const columns = [
+        "ADD COLUMN bio TEXT",
+        "ADD COLUMN phone VARCHAR(20)",
+        "ADD COLUMN location VARCHAR(100)",
+        "ADD COLUMN avatar_url VARCHAR(255)",
+        "ADD COLUMN current_level VARCHAR(50) DEFAULT 'Not assessed yet'",
+        "ADD COLUMN learning_goal VARCHAR(100) DEFAULT 'General Fluency'",
+        "ADD COLUMN daily_goal INT DEFAULT 20",
+        "ADD COLUMN first_name VARCHAR(100)",
+        "ADD COLUMN birthday DATE"
+    ];
+
+    columns.forEach(col => {
+        pool.query(`ALTER TABLE users ${col}`, (err) => {
+            // Ignore duplicate column errors
+            if (err && err.code !== 'ER_DUP_FIELDNAME') {
+                // console.error(`Error adding column ${col}:`, err.message);
+            }
+        });
+    });
+    console.log('Profile columns verified.');
+
+    // Create Enrollments Table
+    const createEnrollmentsTableQuery = `
+    CREATE TABLE IF NOT EXISTS enrollments (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_email VARCHAR(255) NOT NULL,
+      course_id VARCHAR(100) NOT NULL,
+      course_title VARCHAR(255) NOT NULL,
+      course_category VARCHAR(100),
+      course_level VARCHAR(50),
+      course_description TEXT,
+      course_thumbnail TEXT,
+      course_instructor VARCHAR(255),
+      course_lessons INT DEFAULT 0,
+      progress INT DEFAULT 0,
+      completed_lessons INT DEFAULT 0,
+      enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_enrollment (user_email, course_id),
+      FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+    )
+  `;
+
+    pool.query(createEnrollmentsTableQuery, (err) => {
+        if (err) {
+            console.error('Error creating enrollments table:', err);
+        } else {
+            console.log('Enrollments table checked/created.');
+        }
+    });
+
     // Root Route
     app.get('/', (req, res) => {
         res.send('MyEnglish Backend Server is Running. Please use the frontend application to interact.');
@@ -84,17 +147,17 @@ function startServer() {
 
     // Routes
     app.post('/api/signup', async (req, res) => {
-        const { username, email, password } = req.body;
+        const { username, email, password, first_name, birthday } = req.body;
 
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !first_name || !birthday) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-            pool.query(query, [username, email, hashedPassword], (err, result) => {
+            const query = 'INSERT INTO users (username, email, password, first_name, birthday) VALUES (?, ?, ?, ?, ?)';
+            pool.query(query, [username, email, hashedPassword, first_name, birthday], (err, result) => {
                 if (err) {
                     if (err.code === 'ER_DUP_ENTRY') {
                         return res.status(409).json({ message: 'Email already exists' });
@@ -137,8 +200,241 @@ function startServer() {
 
             res.json({
                 message: 'Login successful',
-                user: { id: user.id, username: user.username, email: user.email }
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    bio: user.bio,
+                    phone: user.phone,
+                    location: user.location,
+                    avatar_url: user.avatar_url,
+                    current_level: user.current_level,
+                    learning_goal: user.learning_goal,
+                    daily_goal: user.daily_goal,
+                    first_name: user.first_name,
+                    birthday: user.birthday
+                }
             });
+        });
+    });
+
+    // Get Profile
+    app.get('/api/profile', (req, res) => {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ message: 'Email required' });
+
+        console.log('Getting profile for email:', email);
+        const query = 'SELECT id, username, email, bio, phone, location, avatar_url, current_level, learning_goal, daily_goal, first_name, birthday, created_at FROM users WHERE email = ?';
+        pool.query(query, [email], (err, results) => {
+            if (err) {
+                console.error('Error fetching profile:', err);
+                return res.status(500).json({ message: 'Server error' });
+            }
+            if (results.length === 0) {
+                console.log('User not found for email:', email);
+                return res.status(404).json({ message: 'User not found' });
+            }
+            console.log('Profile retrieved from DB:', results[0]);
+            res.json(results[0]);
+        });
+    });
+
+    // Update Profile
+    app.put('/api/profile', (req, res) => {
+        const { email, username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level } = req.body;
+        
+        console.log('Update profile request received for:', email);
+        console.log('Update data:', { username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level });
+        
+        if (!email) return res.status(400).json({ message: 'Email required' });
+
+        // Sanitize date for MySQL (empty string, null, or undefined -> null)
+        // If birthday has a valid date value, keep it, otherwise set to null
+        const birthdayVal = (birthday && birthday !== '') ? birthday : null;
+        const phoneVal = (phone && phone !== '') ? phone : null;
+        const locationVal = (location && location !== '') ? location : null;
+        const bioVal = (bio && bio !== '') ? bio : null;
+
+        const query = `UPDATE users SET 
+            username = ?, 
+            bio = ?, 
+            phone = ?, 
+            location = ?, 
+            learning_goal = ?, 
+            daily_goal = ?, 
+            first_name = ?, 
+            birthday = ?,
+            current_level = ?
+            WHERE email = ?`;
+            
+        console.log('Executing update query with values:', [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email]);
+            
+        pool.query(query, [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email], (err, result) => {
+            if (err) {
+                console.error('Error updating profile:', err);
+                return res.status(500).json({ message: 'Server error updating profile', error: err.message });
+            }
+            if (result.affectedRows === 0) {
+                console.log('No rows updated for email:', email);
+                return res.status(404).json({ message: 'User not found' });
+            }
+            console.log('Profile updated successfully in DB for:', email);
+            console.log('Affected rows:', result.affectedRows);
+            console.log('Changed rows:', result.changedRows);
+            res.json({ message: 'Profile updated successfully', affectedRows: result.affectedRows, changedRows: result.changedRows });
+        });
+    });
+
+    // Delete Account
+    app.delete('/api/profile', (req, res) => {
+        const email = req.body.email || req.query.email;
+        console.log('Attempting to delete account for email:', email);
+
+        if (!email) {
+            console.log('Delete failed: Email required');
+            return res.status(400).json({ message: 'Email required' });
+        }
+
+        const query = 'DELETE FROM users WHERE email = ?';
+        pool.query(query, [email], (err, result) => {
+            if (err) {
+                console.error('Database error during delete:', err);
+                return res.status(500).json({ message: 'Server error check console' });
+            }
+            if (result.affectedRows === 0) {
+                console.log('Delete failed: User not found for email', email);
+                return res.status(404).json({ message: 'User not found' });
+            }
+            console.log('Account deleted successfully for:', email);
+            res.json({ message: 'Account deleted successfully' });
+        });
+    });
+
+    // ============ ENROLLMENT ENDPOINTS ============
+
+    // Get user's enrolled courses
+    app.get('/api/enrollments', (req, res) => {
+        const email = req.query.email;
+        console.log('Fetching enrollments for email:', email);
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email required' });
+        }
+
+        const query = 'SELECT * FROM enrollments WHERE user_email = ? ORDER BY enrolled_at DESC';
+        pool.query(query, [email], (err, results) => {
+            if (err) {
+                console.error('Error fetching enrollments:', err);
+                return res.status(500).json({ message: 'Server error fetching enrollments' });
+            }
+            console.log('Enrollments fetched:', results.length);
+            res.json(results);
+        });
+    });
+
+    // Enroll in a course
+    app.post('/api/enrollments', (req, res) => {
+        const {
+            userEmail,
+            courseId,
+            courseTitle,
+            courseCategory,
+            courseLevel,
+            courseDescription,
+            courseThumbnail,
+            courseInstructor,
+            courseLessons
+        } = req.body;
+
+        console.log('Enrolling user:', userEmail, 'in course:', courseTitle);
+
+        if (!userEmail || !courseId || !courseTitle) {
+            return res.status(400).json({ message: 'User email, course ID, and course title are required' });
+        }
+
+        const query = `
+            INSERT INTO enrollments 
+            (user_email, course_id, course_title, course_category, course_level, 
+             course_description, course_thumbnail, course_instructor, course_lessons)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        pool.query(query, [
+            userEmail,
+            courseId,
+            courseTitle,
+            courseCategory || '',
+            courseLevel || '',
+            courseDescription || '',
+            courseThumbnail || '',
+            courseInstructor || '',
+            courseLessons || 0
+        ], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    console.log('User already enrolled in this course');
+                    return res.status(409).json({ message: 'Already enrolled in this course' });
+                }
+                console.error('Error enrolling in course:', err);
+                return res.status(500).json({ message: 'Server error enrolling in course' });
+            }
+            console.log('Successfully enrolled in course:', courseTitle);
+            res.status(201).json({ message: 'Successfully enrolled', enrollmentId: result.insertId });
+        });
+    });
+
+    // Unenroll from a course
+    app.delete('/api/enrollments/:courseId', (req, res) => {
+        const { courseId } = req.params;
+        const { email } = req.body;
+
+        console.log('Unenrolling user:', email, 'from course:', courseId);
+
+        if (!email || !courseId) {
+            return res.status(400).json({ message: 'Email and course ID required' });
+        }
+
+        const query = 'DELETE FROM enrollments WHERE user_email = ? AND course_id = ?';
+        pool.query(query, [email, courseId], (err, result) => {
+            if (err) {
+                console.error('Error unenrolling from course:', err);
+                return res.status(500).json({ message: 'Server error unenrolling from course' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Enrollment not found' });
+            }
+            console.log('Successfully unenrolled from course');
+            res.json({ message: 'Successfully unenrolled' });
+        });
+    });
+
+    // Update course progress
+    app.put('/api/enrollments/:courseId/progress', (req, res) => {
+        const { courseId } = req.params;
+        const { email, progress, completedLessons } = req.body;
+
+        console.log('Updating progress for user:', email, 'course:', courseId);
+
+        if (!email || !courseId) {
+            return res.status(400).json({ message: 'Email and course ID required' });
+        }
+
+        const query = `
+            UPDATE enrollments 
+            SET progress = ?, completed_lessons = ?
+            WHERE user_email = ? AND course_id = ?
+        `;
+
+        pool.query(query, [progress || 0, completedLessons || 0, email, courseId], (err, result) => {
+            if (err) {
+                console.error('Error updating progress:', err);
+                return res.status(500).json({ message: 'Server error updating progress' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Enrollment not found' });
+            }
+            console.log('Progress updated successfully');
+            res.json({ message: 'Progress updated successfully' });
         });
     });
 

@@ -5,6 +5,8 @@ import { Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle } from 
 export function SignupPage() {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
+    const [first_name, setFirstName] = useState('');
+    const [birthday, setBirthday] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +21,7 @@ export function SignupPage() {
             const response = await fetch('http://localhost:3001/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password }),
+                body: JSON.stringify({ username, email, password, first_name, birthday }),
             });
 
             const data = await response.json();
@@ -68,20 +70,45 @@ export function SignupPage() {
                 )}
 
                 <form onSubmit={handleSignup} className="space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-foreground">First Name</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={first_name}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    className="w-full pl-4 py-3 bg-muted/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl outline-none font-medium transition-all"
+                                    placeholder="Jane"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-foreground">Last Name (User)</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full pl-4 py-3 bg-muted/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl outline-none font-medium transition-all"
+                                    placeholder="Doe"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold text-foreground">Full Name</label>
+                        <label className="text-sm font-semibold text-foreground">Birthday</label>
                         <div className="relative">
                             <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full pl-4 pr-10 py-3 bg-muted/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl outline-none font-medium transition-all"
-                                placeholder="John Doe"
+                                type="date"
+                                value={birthday}
+                                onChange={(e) => setBirthday(e.target.value)}
+                                className="w-full pl-4 pr-4 py-3 bg-muted/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl outline-none font-medium transition-all"
                                 required
                             />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                                <User size={18} />
-                            </div>
                         </div>
                     </div>
 

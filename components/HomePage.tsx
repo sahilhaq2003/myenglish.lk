@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     GraduationCap, ArrowRight, BookOpen, Award, Calendar,
     Users, TrendingUp, Globe, Star, CheckCircle2, Play,
-    Sparkles, Target, Zap, Shield, Clock, Trophy
+    Sparkles, Target, Zap, Shield, Clock, Trophy, Check, Search, Filter
 } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -14,13 +14,216 @@ interface HomePageProps {
 }
 
 export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageProps) {
+    const [isAnnualPricing, setIsAnnualPricing] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLevel, setSelectedLevel] = useState<string>('All');
+
+    // Pricing plans
+    const pricingPlans = [
+        {
+            name: 'Free Starter',
+            price: 0,
+            description: 'Perfect for getting started with English basics.',
+            features: [
+                '5 AI conversation minutes/day',
+                'Basic vocabulary & grammar',
+                'Access to community forum',
+                'Limited daily lessons'
+            ],
+            cta: 'Start for Free',
+            popular: false
+        },
+        {
+            name: 'Pro Learner',
+            price: isAnnualPricing ? 9.99 : 14.99,
+            description: 'Accelerate your fluency with unlimited practice.',
+            features: [
+                'Unlimited AI conversations',
+                'Advanced roleplay scenarios',
+                'Detailed pronunciation analysis',
+                'Personalized learning path',
+                'Certificate of completion',
+                'Ad-free experience'
+            ],
+            cta: 'Start 7-Day Free Trial',
+            popular: true
+        },
+        {
+            name: 'Business',
+            price: isAnnualPricing ? 29.99 : 39.99,
+            description: 'For professionals and teams needing advanced skills.',
+            features: [
+                'Everything in Pro',
+                'Business English modules',
+                'Interview preparation',
+                'Presentation coaching',
+                'Team progress analytics',
+                'Priority support'
+            ],
+            cta: 'Contact Sales',
+            popular: false
+        }
+    ];
+
+    // Featured courses
+    const featuredCourses = [
+        {
+            id: '1',
+            title: 'Complete English Grammar Mastery',
+            description: 'Master all essential grammar rules from basics to advanced.',
+            instructor: 'Dr. Sarah Johnson',
+            rating: 4.9,
+            reviews: 2341,
+            students: 15234,
+            duration: '12 weeks',
+            level: 'Intermediate',
+            category: 'Grammar',
+            price: 'Premium',
+            thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop',
+            lessons: 48,
+        },
+        {
+            id: '2',
+            title: 'IELTS 8+ Band Guaranteed',
+            description: 'Comprehensive IELTS preparation with proven strategies.',
+            instructor: 'Michael Chen',
+            rating: 4.8,
+            reviews: 1876,
+            students: 8932,
+            duration: '8 weeks',
+            level: 'Advanced',
+            category: 'Exam Prep',
+            price: 99,
+            thumbnail: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=600&fit=crop',
+            lessons: 64,
+        },
+        {
+            id: '3',
+            title: 'Business English for Professionals',
+            description: 'Master workplace communication and presentations.',
+            instructor: 'Emma Williams',
+            rating: 4.9,
+            reviews: 3102,
+            students: 12456,
+            duration: '10 weeks',
+            level: 'Intermediate',
+            category: 'Business',
+            price: 'Premium',
+            thumbnail: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=600&fit=crop',
+            lessons: 40,
+        },
+        {
+            id: '4',
+            title: 'American Accent Training',
+            description: 'Perfect your American pronunciation.',
+            instructor: 'David Miller',
+            rating: 4.7,
+            reviews: 987,
+            students: 5421,
+            duration: '6 weeks',
+            level: 'Intermediate',
+            category: 'Speaking',
+            price: 79,
+            thumbnail: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=600&fit=crop',
+            lessons: 32,
+        },
+        {
+            id: '5',
+            title: 'Conversational English for Beginners',
+            description: 'Build confidence in everyday conversations.',
+            instructor: 'Lisa Anderson',
+            rating: 4.8,
+            reviews: 2156,
+            students: 18790,
+            duration: '8 weeks',
+            level: 'Beginner',
+            category: 'Speaking',
+            price: 'Premium',
+            thumbnail: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop',
+            lessons: 36,
+        },
+        {
+            id: '6',
+            title: 'Advanced Writing & Composition',
+            description: 'Enhance your writing skills for academic and professional success.',
+            instructor: 'Prof. Robert Lee',
+            rating: 4.9,
+            reviews: 1543,
+            students: 9876,
+            duration: '10 weeks',
+            level: 'Advanced',
+            category: 'Writing',
+            price: 89,
+            thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=600&fit=crop',
+            lessons: 45,
+        },
+    ];
+
+    const filteredCourses = featuredCourses.filter(course => {
+        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            course.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesLevel = selectedLevel === 'All' || course.level === selectedLevel;
+        return matchesSearch && matchesLevel;
+    });
+
+    const handleEnrollCourse = async (course: typeof featuredCourses[0]) => {
+        // Check if user is logged in
+        const isLoggedIn = localStorage.getItem('myenglish_token') === 'logged_in';
+        if (!isLoggedIn) {
+            onGetStarted();
+            return;
+        }
+
+        const userEmail = localStorage.getItem('myenglish_userEmail');
+        if (!userEmail) {
+            alert('Please log in to enroll in courses');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3001/api/enrollments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userEmail,
+                    courseId: course.id,
+                    courseTitle: course.title,
+                    courseCategory: course.category,
+                    courseLevel: course.level,
+                    courseDescription: course.description,
+                    courseThumbnail: course.thumbnail,
+                    courseInstructor: course.instructor,
+                    courseLessons: course.lessons,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.status === 409) {
+                alert('You are already enrolled in this course!');
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to enroll in course');
+            }
+
+            alert(`Successfully enrolled in "${course.title}"! Check your dashboard to start learning.`);
+        } catch (error) {
+            console.error('Error enrolling in course:', error);
+            alert('Failed to enroll in course. Please try again.');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background relative flex flex-col">
             <Header onSignIn={onSignIn} onGetStarted={onGetStarted} />
 
             {/* Hero Section */}
             <main className="flex-grow">
-                <section className="relative flex items-center justify-center px-4 sm:px-6 pt-32 pb-20 overflow-hidden">
+                <section id="hero" className="relative flex items-center justify-center px-4 sm:px-6 pt-32 pb-20 overflow-hidden">
                     {/* Background Effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
@@ -60,8 +263,11 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                             <button
-                                onClick={onExploreCourses}
-                                className="px-8 py-5 bg-secondary border-2 border-border hover:bg-muted text-secondary-foreground rounded-2xl font-bold text-lg transition-all min-w-[240px]"
+                                onClick={() => {
+                                    const coursesSection = document.getElementById('courses');
+                                    coursesSection?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className="px-8 py-5 bg-card border-2 border-border hover:border-primary hover:bg-card/80 text-foreground rounded-2xl font-bold text-lg transition-all min-w-[240px]"
                             >
                                 Explore Courses
                             </button>
@@ -99,112 +305,8 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                     </div>
                 </section>
 
-                {/* Learning Paths Section */}
-                <section id="courses" className="py-24 px-4 sm:px-6">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4">
-                                Choose Your Learning Journey
-                            </h2>
-                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                                Personalized paths designed for your goals and current level
-                            </p>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {/* Beginner Path */}
-                            <div className="group bg-card hover:bg-card/80 rounded-3xl p-8 border-2 border-border hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 cursor-pointer">
-                                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                    <Sparkles size={32} className="text-green-600 dark:text-green-400" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-3">Beginner Path</h3>
-                                <p className="text-muted-foreground mb-4">Start from scratch and build a strong foundation</p>
-                                <div className="space-y-2 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Clock size={16} />
-                                        <span>3-6 months</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Target size={16} />
-                                        <span>Level: A1-A2</span>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all">
-                                    Begin Journey
-                                </button>
-                            </div>
-
-                            {/* Professional Path */}
-                            <div className="group bg-card hover:bg-card/80 rounded-3xl p-8 border-2 border-border hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 cursor-pointer">
-                                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                    <TrendingUp size={32} className="text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-3">Professional English</h3>
-                                <p className="text-muted-foreground mb-4">Advance your career with business communication</p>
-                                <div className="space-y-2 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Clock size={16} />
-                                        <span>2-4 months</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Target size={16} />
-                                        <span>Level: B2-C1</span>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all">
-                                    Boost Career
-                                </button>
-                            </div>
-
-                            {/* Exam Prep Path */}
-                            <div className="group bg-card hover:bg-card/80 rounded-3xl p-8 border-2 border-border hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 cursor-pointer">
-                                <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                    <Trophy size={32} className="text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-3">Exam Preparation</h3>
-                                <p className="text-muted-foreground mb-4">Ace IELTS, TOEFL, PTE with proven strategies</p>
-                                <div className="space-y-2 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Clock size={16} />
-                                        <span>1-3 months</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Target size={16} />
-                                        <span>Level: B1-C1</span>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all">
-                                    Start Prep
-                                </button>
-                            </div>
-
-                            {/* Business Path */}
-                            <div className="group bg-card hover:bg-card/80 rounded-3xl p-8 border-2 border-border hover:border-primary transition-all hover:shadow-2xl hover:-translate-y-2 cursor-pointer">
-                                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                    <Globe size={32} className="text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-3">Business Communication</h3>
-                                <p className="text-muted-foreground mb-4">Lead with confidence in global settings</p>
-                                <div className="space-y-2 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Clock size={16} />
-                                        <span>2-3 months</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Target size={16} />
-                                        <span>Level: B2-C2</span>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold transition-all">
-                                    Master Business English
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
                 {/* Key Features Grid */}
-                <section id="features" className="py-24 px-4 sm:px-6 bg-muted/30">
+                <section id="features" className="py-24 px-4 sm:px-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4">
@@ -216,7 +318,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                         </div>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {/* Feature 1 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                                     <Users size={28} className="text-primary" />
@@ -227,7 +328,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 </p>
                             </div>
 
-                            {/* Feature 2 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center mb-6">
                                     <TrendingUp size={28} className="text-secondary" />
@@ -238,7 +338,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 </p>
                             </div>
 
-                            {/* Feature 3 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
                                     <BookOpen size={28} className="text-accent" />
@@ -249,7 +348,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 </p>
                             </div>
 
-                            {/* Feature 4 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                                     <Award size={28} className="text-primary" />
@@ -260,7 +358,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 </p>
                             </div>
 
-                            {/* Feature 5 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center mb-6">
                                     <Zap size={28} className="text-secondary" />
@@ -271,7 +368,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 </p>
                             </div>
 
-                            {/* Feature 6 */}
                             <div className="bg-card rounded-2xl p-8 border border-border hover:shadow-xl transition-all">
                                 <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
                                     <Globe size={28} className="text-accent" />
@@ -285,89 +381,220 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                     </div>
                 </section>
 
-                {/* How It Works */}
-                <section id="how-it-works" className="py-24 px-4 sm:px-6">
+                {/* Courses Section */}
+                <section id="courses" className="py-24 px-4 sm:px-6 bg-muted/30">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4">
-                                How It Works
+                                Popular Courses
                             </h2>
                             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                                Your journey to English fluency in three simple steps
+                                Expert-led courses designed to help you achieve your English learning goals
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-12">
-                            {/* Step 1 */}
-                            <div className="relative text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-primary/70 rounded-full text-white text-3xl font-black mb-6 shadow-xl">
-                                    1
+                        {/* Search and Filter */}
+                        <div className="mb-12 max-w-4xl mx-auto">
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search courses..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3 bg-card rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                                    />
                                 </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-4">Assess & Personalize</h3>
-                                <ul className="space-y-3 text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-primary mt-0.5 shrink-0" />
-                                        <span>Take 5-minute skill assessment</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-primary mt-0.5 shrink-0" />
-                                        <span>AI creates custom learning path</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-primary mt-0.5 shrink-0" />
-                                        <span>Set your goals and schedule</span>
-                                    </li>
-                                </ul>
+                                <select
+                                    value={selectedLevel}
+                                    onChange={(e) => setSelectedLevel(e.target.value)}
+                                    className="px-4 py-3 bg-card rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                                >
+                                    <option value="All">All Levels</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
                             </div>
+                        </div>
 
-                            {/* Step 2 */}
-                            <div className="relative text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-secondary to-secondary/70 rounded-full text-white text-3xl font-black mb-6 shadow-xl">
-                                    2
-                                </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-4">Learn & Practice</h3>
-                                <ul className="space-y-3 text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-secondary mt-0.5 shrink-0" />
-                                        <span>Interactive video lessons</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-secondary mt-0.5 shrink-0" />
-                                        <span>AI conversation practice</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-secondary mt-0.5 shrink-0" />
-                                        <span>Real-time feedback & support</span>
-                                    </li>
-                                </ul>
-                            </div>
+                        {/* Course Grid */}
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredCourses.map((course) => (
+                                <div
+                                    key={course.id}
+                                    className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer"
+                                >
+                                    {/* Thumbnail */}
+                                    <div className="relative h-48 overflow-hidden">
+                                        <img 
+                                            src={course.thumbnail} 
+                                            alt={course.title}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                        <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-lg">
+                                            {course.level}
+                                        </div>
+                                    </div>
 
-                            {/* Step 3 */}
-                            <div className="relative text-center">
-                                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent to-accent/70 rounded-full text-white text-3xl font-black mb-6 shadow-xl">
-                                    3
+                                    {/* Content */}
+                                    <div className="p-6">
+                                        <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                                            {course.category}
+                                        </div>
+
+                                        <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                                            {course.title}
+                                        </h3>
+
+                                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                            {course.description}
+                                        </p>
+
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                                {course.instructor.charAt(0)}
+                                            </div>
+                                            <span className="text-sm text-muted-foreground">{course.instructor}</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <Star size={16} className="text-yellow-500 fill-yellow-500" />
+                                                <span className="font-bold text-foreground">{course.rating}</span>
+                                                <span>({course.reviews.toLocaleString()})</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Users size={16} />
+                                                <span>{course.students.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <BookOpen size={16} />
+                                                <span>{course.lessons} lessons</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={16} />
+                                                <span>{course.duration}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-4 border-t border-border">
+                                            <div>
+                                                {course.price === 'Premium' ? (
+                                                    <div>
+                                                        <div className="text-xs text-muted-foreground">Included in</div>
+                                                        <div className="text-lg font-bold text-primary">Premium</div>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <div className="text-xs text-muted-foreground">One-time</div>
+                                                        <div className="text-2xl font-bold text-foreground">${course.price}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => handleEnrollCourse(course)}
+                                                className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2"
+                                            >
+                                                Enroll Now
+                                                <Play size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-foreground mb-4">Achieve & Certify</h3>
-                                <ul className="space-y-3 text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-accent mt-0.5 shrink-0" />
-                                        <span>Track measurable progress</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-accent mt-0.5 shrink-0" />
-                                        <span>Earn certificates</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle2 size={20} className="text-accent mt-0.5 shrink-0" />
-                                        <span>Unlock career opportunities</span>
-                                    </li>
-                                </ul>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </section>
 
-                {/* CTA Section */}
+                {/* Pricing Section */}
+                <section id="pricing" className="py-24 px-4 sm:px-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-6">
+                                Choose Your Plan
+                            </h2>
+                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+                                Flexible pricing for every learning goal. Start free, upgrade anytime.
+                            </p>
+
+                            {/* Billing Toggle */}
+                            <div className="flex items-center justify-center gap-4 mb-8">
+                                <span className={`text-sm font-bold ${!isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
+                                <button
+                                    onClick={() => setIsAnnualPricing(!isAnnualPricing)}
+                                    className="relative w-14 h-8 bg-primary/20 rounded-full transition-colors focus:outline-none"
+                                >
+                                    <div className={`absolute top-1 left-1 w-6 h-6 bg-primary rounded-full transition-transform ${isAnnualPricing ? 'translate-x-6' : ''}`} />
+                                </button>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Yearly</span>
+                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full">Save 20%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pricing Cards */}
+                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                            {pricingPlans.map((plan) => (
+                                <div
+                                    key={plan.name}
+                                    className={`relative bg-card rounded-[2rem] p-8 border-2 transition-all hover:-translate-y-2 ${plan.popular
+                                        ? 'border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
+                                        : 'border-border hover:border-primary/50'
+                                        }`}
+                                >
+                                    {plan.popular && (
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm font-bold rounded-full shadow-lg">
+                                            Most Popular
+                                        </div>
+                                    )}
+
+                                    <div className="mb-8">
+                                        <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                                        <p className="text-muted-foreground text-sm h-10">{plan.description}</p>
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-4xl font-black text-foreground">${plan.price}</span>
+                                            <span className="text-muted-foreground">/mo</span>
+                                        </div>
+                                        {isAnnualPricing && plan.price > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-2">Billed ${Math.round(plan.price * 12)} yearly</p>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={onGetStarted}
+                                        className={`w-full py-4 rounded-xl font-bold mb-8 transition-all ${plan.popular
+                                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
+                                            : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                                            }`}
+                                    >
+                                        {plan.cta}
+                                    </button>
+
+                                    <div className="space-y-4">
+                                        {plan.features.map((feature, i) => (
+                                            <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                                                <Check size={18} className="text-primary mt-0.5 shrink-0" />
+                                                <span>{feature}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Final CTA Section */}
                 <section className="py-24 px-4 sm:px-6 bg-gradient-to-br from-primary via-primary/90 to-secondary">
                     <div className="max-w-4xl mx-auto text-center text-white">
                         <h2 className="text-4xl sm:text-5xl font-black mb-6">
@@ -390,6 +617,6 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                 </section>
             </main>
             <Footer />
-        </div >
+        </div>
     );
 }
