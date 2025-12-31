@@ -6,6 +6,11 @@ import {
   AIPersona, PERSONAS, MOCK_MODULES, Module
 } from './types';
 import { ThemeToggle } from './components/ThemeToggle';
+import { HomePage } from './components/HomePage';
+import { LoginPage } from './components/LoginPage';
+import { SignupPage } from './components/SignupPage';
+import { CoursesPage } from './components/CoursesPage';
+import { PricingPage } from './components/PricingPage';
 
 import { decode, decodeAudioData, createBlob } from './utils/audio';
 import { getLessonContent, LessonContent } from './lessons';
@@ -107,7 +112,32 @@ interface CustomWindow {
 
 const App: React.FC = () => {
   // --- Page Navigation State ---
-  const [currentPage, setCurrentPage] = useState<'home' | 'courses' | 'speaking' | 'exam-prep' | 'business-english' | 'practice' | 'community' | 'dashboard'>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Sync Phase with Route to support browser navigation (Back/Forward)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/') {
+      if (phase !== AppPhase.WELCOME) {
+        setPhase(AppPhase.WELCOME);
+        // Clean up audio if returning home
+        stopAudio();
+      }
+    } else if (path === '/assessment') {
+      if (phase !== AppPhase.ASSESSMENT) setPhase(AppPhase.ASSESSMENT);
+    } else if (path === '/analyzing') {
+      if (phase !== AppPhase.ANALYZING) setPhase(AppPhase.ANALYZING);
+    } else if (path === '/result') {
+      if (phase !== AppPhase.RESULT) setPhase(AppPhase.RESULT);
+    } else if (path === '/roadmap') {
+      if (phase !== AppPhase.PATH) setPhase(AppPhase.PATH);
+    } else if (path === '/dashboard') {
+      if (phase !== AppPhase.DASHBOARD) setPhase(AppPhase.DASHBOARD);
+    } else if (path === '/learning-session') {
+      if (phase !== AppPhase.LEARNING_SESSION) setPhase(AppPhase.LEARNING_SESSION);
+    }
+  }, [location.pathname]);
 
   // --- Core State ---
   const [phase, setPhase] = useState<AppPhase>(() => {
@@ -286,7 +316,7 @@ const App: React.FC = () => {
     localStorage.clear();
     // Reset to welcome phase and navigate to home page
     setPhase(AppPhase.WELCOME);
-    setCurrentPage('home');
+    navigate('/');
     setShowProfile(false);
     // Reset user data
     setUserLevel(null);
@@ -599,6 +629,7 @@ const App: React.FC = () => {
 
   const performAnalysis = async () => {
     setPhase(AppPhase.ANALYZING);
+    navigate('/analyzing');
     setIsThinking(true);
 
     const apiKey = import.meta.env.VITE_API_KEY || '';
@@ -607,6 +638,7 @@ const App: React.FC = () => {
       setUserLevel(DEFAULT_LEARNING_PATH.level);
       setLearningPath(DEFAULT_LEARNING_PATH);
       setPhase(AppPhase.RESULT);
+      navigate('/result');
       setIsThinking(false);
       return;
     }
@@ -646,10 +678,12 @@ const App: React.FC = () => {
       setUserLevel(level);
       setLearningPath(path);
       setPhase(AppPhase.RESULT);
+      navigate('/result');
     } catch (e) {
       setUserLevel(DEFAULT_LEARNING_PATH.level);
       setLearningPath(DEFAULT_LEARNING_PATH);
       setPhase(AppPhase.RESULT);
+      navigate('/result');
     } finally {
       setIsThinking(false);
     }
@@ -2043,7 +2077,7 @@ EXAMPLE OPENING:
         {userLevel}
       </div>
       <button
-        onClick={() => setPhase(AppPhase.PATH)}
+        onClick={() => { setPhase(AppPhase.PATH); navigate('/roadmap'); }}
         className="px-12 py-5 bg-indigo-600 rounded-2xl font-bold text-xl hover:bg-indigo-500 transition-all flex items-center gap-3 shadow-xl shadow-indigo-500/20"
       >
         View My Roadmap <ArrowRight size={24} />
@@ -2104,7 +2138,7 @@ EXAMPLE OPENING:
         </div>
 
         <button
-          onClick={() => setPhase(AppPhase.DASHBOARD)}
+          onClick={() => { setPhase(AppPhase.DASHBOARD); navigate('/dashboard'); }}
           className="w-full mt-16 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[2.5rem] font-bold text-2xl shadow-2xl hover:scale-[1.01] transition-all flex items-center justify-center gap-4"
         >
           Access My Dashboard <CheckCircle size={28} />
@@ -2775,32 +2809,25 @@ EXAMPLE OPENING:
   // --- Navigation Handlers ---
   const handleNavigate = (page: string) => {
     if (page === 'home' || page === '/') {
-      setCurrentPage('home');
-      setPhase(AppPhase.WELCOME);
+      navigate('/');
     } else if (page === '/courses' || page === 'courses') {
-      setCurrentPage('courses');
+      setActiveTab('learn');
+      navigate('/dashboard');
     } else if (page === '/speaking' || page === 'speaking') {
-      setCurrentPage('speaking');
-    } else if (page === '/exam-prep' || page === 'exam-prep') {
-      setCurrentPage('exam-prep');
-    } else if (page === '/business-english' || page === 'business-english') {
-      setCurrentPage('business-english');
-    } else if (page === '/practice' || page === 'practice') {
-      setCurrentPage('practice');
-    } else if (page === '/community' || page === 'community') {
-      setCurrentPage('community');
+      setActiveTab('practice');
+      navigate('/dashboard');
     } else if (page === '/dashboard' || page === 'dashboard') {
-      setCurrentPage('dashboard');
-      setPhase(AppPhase.DASHBOARD);
+      navigate('/dashboard');
+    } else {
+      // Default fallback
+      if (page.startsWith('/')) navigate(page);
+      else navigate('/' + page);
     }
   };
 
-  const handleGetStarted = () => {
-    startAssessment();
-  };
-
   const handleExploreCourses = () => {
-    setCurrentPage('courses');
+    setActiveTab('learn');
+    navigate('/dashboard');
   };
 
   const handleEnrollCourse = (courseId: string) => {
@@ -2813,36 +2840,25 @@ EXAMPLE OPENING:
     // TODO: Implement course detail view
   };
 
-
-
   // --- Router ---
-  // Show full-screen views (Assessment, Learning Session, Dashboard) without header/footer
-  if (phase === AppPhase.ASSESSMENT) {
-    return AssessmentView();
-  }
-
-  if (phase === AppPhase.ANALYZING) {
-    return AnalyzingView();
-  }
-
-  if (phase === AppPhase.RESULT) {
-    return ResultView();
-  }
-
-  if (phase === AppPhase.PATH) {
-    return RoadmapView();
-  }
-
-  if (phase === AppPhase.LEARNING_SESSION) {
-    return LearningSessionView();
-  }
-
-  if (phase === AppPhase.DASHBOARD) {
-    return DashboardView();
-  }
-
-  // Default to Welcome View
-  return WelcomeView();
+  return (
+    <div className="app-container">
+      <Routes>
+        <Route path="/" element={<HomePage onGetStarted={() => { setPhase(AppPhase.ASSESSMENT); navigate('/assessment'); }} onExploreCourses={handleExploreCourses} onSignIn={() => navigate('/login')} />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/courses" element={<CoursesPage onEnroll={() => { setPhase(AppPhase.ASSESSMENT); navigate('/assessment'); }} onCourseClick={(id) => console.log('View course', id)} />} />
+        <Route path="/pricing" element={<PricingPage onGetStarted={() => { setPhase(AppPhase.ASSESSMENT); navigate('/assessment'); }} onSignIn={() => navigate('/login')} />} />
+        <Route path="/assessment" element={AssessmentView()} />
+        <Route path="/analyzing" element={AnalyzingView()} />
+        <Route path="/result" element={ResultView()} />
+        <Route path="/roadmap" element={RoadmapView()} />
+        <Route path="/dashboard" element={DashboardView()} />
+        <Route path="/learning-session" element={LearningSessionView()} />
+        <Route path="*" element={<HomePage onGetStarted={() => { setPhase(AppPhase.ASSESSMENT); navigate('/assessment'); }} onExploreCourses={handleExploreCourses} onSignIn={() => navigate('/login')} />} />
+      </Routes>
+    </div>
+  );
 };
 
 export default App;
