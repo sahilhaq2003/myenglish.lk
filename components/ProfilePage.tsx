@@ -65,7 +65,7 @@ export function ProfilePage() {
             }
 
             console.log('Fetching profile for email:', email);
-            const response = await fetch(`http://localhost:3001/api/profile?email=${email}`);
+            const response = await fetch(`/api/profile?email=${email}`);
 
             if (response.status === 404) {
                 // User exists in local storage but not in DB (e.g. DB reset)
@@ -112,7 +112,7 @@ export function ProfilePage() {
                     learning_goal: data.learning_goal || 'Professional Communication',
                     daily_goal: data.daily_goal || 20
                 };
-                
+
                 console.log('Setting profile state with:', profileData);
                 setProfile(profileData);
             }
@@ -153,7 +153,7 @@ export function ProfilePage() {
         console.log('Birthday value being sent:', profile.birthday);
 
         try {
-            const response = await fetch('http://localhost:3001/api/profile', {
+            const response = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(profileToSave)
@@ -162,7 +162,7 @@ export function ProfilePage() {
             if (response.ok) {
                 const result = await response.json();
                 console.log('Profile update response:', result);
-                
+
                 // Update local storage with Full Name for better display in Sidebar/Header
                 const displayName = profile.first_name
                     ? `${profile.first_name} ${profile.username || ''}`.trim()
@@ -503,16 +503,14 @@ export function ProfilePage() {
             {/* Toast Notification */}
             {showToast && (
                 <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
-                    <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 min-w-[320px] max-w-md ${
-                        toastType === 'success'
+                    <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 min-w-[320px] max-w-md ${toastType === 'success'
                             ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                             : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                    }`}>
-                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                            toastType === 'success'
+                        }`}>
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${toastType === 'success'
                                 ? 'bg-green-100 dark:bg-green-900/40'
                                 : 'bg-red-100 dark:bg-red-900/40'
-                        }`}>
+                            }`}>
                             {toastType === 'success' ? (
                                 <CheckCircle2 size={24} className="text-green-600 dark:text-green-400" />
                             ) : (
@@ -520,28 +518,25 @@ export function ProfilePage() {
                             )}
                         </div>
                         <div className="flex-1">
-                            <p className={`font-bold text-sm ${
-                                toastType === 'success'
+                            <p className={`font-bold text-sm ${toastType === 'success'
                                     ? 'text-green-900 dark:text-green-100'
                                     : 'text-red-900 dark:text-red-100'
-                            }`}>
+                                }`}>
                                 {toastType === 'success' ? 'Success!' : 'Error'}
                             </p>
-                            <p className={`text-sm ${
-                                toastType === 'success'
+                            <p className={`text-sm ${toastType === 'success'
                                     ? 'text-green-700 dark:text-green-300'
                                     : 'text-red-700 dark:text-red-300'
-                            }`}>
+                                }`}>
                                 {toastMessage}
                             </p>
                         </div>
                         <button
                             onClick={() => setShowToast(false)}
-                            className={`flex-shrink-0 p-1 rounded-lg transition-colors ${
-                                toastType === 'success'
+                            className={`flex-shrink-0 p-1 rounded-lg transition-colors ${toastType === 'success'
                                     ? 'hover:bg-green-100 dark:hover:bg-green-900/40 text-green-700 dark:text-green-300'
                                     : 'hover:bg-red-100 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300'
-                            }`}
+                                }`}
                         >
                             <X size={18} />
                         </button>

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "deploy:build": "npm run build && npm run server"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",

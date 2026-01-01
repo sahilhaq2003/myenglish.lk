@@ -1642,7 +1642,7 @@ EXAMPLE OPENING:
       }
 
       try {
-        const response = await fetch(`http://localhost:3001/api/enrollments?email=${encodeURIComponent(userEmail)}`);
+        const response = await fetch(`/api/enrollments?email=${encodeURIComponent(userEmail)}`);
         if (!response.ok) {
           throw new Error('Failed to fetch enrolled courses');
         }
@@ -1672,7 +1672,7 @@ EXAMPLE OPENING:
       if (!userEmail || !unenrollCourse) return;
 
       try {
-        const response = await fetch(`http://localhost:3001/api/enrollments/${unenrollCourse.id}`, {
+        const response = await fetch(`/api/enrollments/${unenrollCourse.id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

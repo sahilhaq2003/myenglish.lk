@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Installing dependencies...
+      - npm install
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the React application...
+      - npm run build
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Preparing for deployment...
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist
+  name: myenglish-build-$(date +%Y%m%d-%H%M%S)
+
+cache:
+  paths:
+    - 'node_modules/**/*'

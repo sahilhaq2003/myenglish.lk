@@ -140,6 +140,26 @@ function startServer() {
         }
     });
 
+    // Health Check Endpoint (for load balancers and monitoring)
+    app.get('/health', (req, res) => {
+        // Check database connection
+        pool.query('SELECT 1', (err) => {
+            if (err) {
+                return res.status(503).json({
+                    status: 'unhealthy',
+                    database: 'disconnected',
+                    error: err.message
+                });
+            }
+            res.json({
+                status: 'healthy',
+                database: 'connected',
+                uptime: process.uptime(),
+                timestamp: new Date().toISOString()
+            });
+        });
+    });
+
     // Root Route
     app.get('/', (req, res) => {
         res.send('MyEnglish Backend Server is Running. Please use the frontend application to interact.');
@@ -242,10 +262,10 @@ function startServer() {
     // Update Profile
     app.put('/api/profile', (req, res) => {
         const { email, username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level } = req.body;
-        
+
         console.log('Update profile request received for:', email);
         console.log('Update data:', { username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level });
-        
+
         if (!email) return res.status(400).json({ message: 'Email required' });
 
         // Sanitize date for MySQL (empty string, null, or undefined -> null)
@@ -266,9 +286,9 @@ function startServer() {
             birthday = ?,
             current_level = ?
             WHERE email = ?`;
-            
+
         console.log('Executing update query with values:', [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email]);
-            
+
         pool.query(query, [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email], (err, result) => {
             if (err) {
                 console.error('Error updating profile:', err);

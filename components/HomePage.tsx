@@ -181,7 +181,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         }
 
         try {
-            const response = await fetch('http://localhost:3001/api/enrollments', {
+            const response = await fetch('/api/enrollments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

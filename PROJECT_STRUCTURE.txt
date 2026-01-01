@@ -1,0 +1,217 @@
+MyEnglish.lk - AWS Deployment Ready
+=====================================
+
+📦 PROJECT STRUCTURE
+====================
+
+myenglish.lk-main/
+│
+├── 📁 .ebextensions/                    # Elastic Beanstalk Configuration
+│   └── nodecommand.config               # Node.js command settings
+│
+├── 📁 scripts/                          # Deployment Scripts
+│   ├── install_dependencies.sh          # Install Node.js, PM2, nginx
+│   ├── start_server.sh                  # Start backend with PM2
+│   ├── start_application.sh            # Configure nginx + frontend
+│   └── stop_application.sh             # Graceful shutdown
+│
+├── 📁 server/                           # Backend API
+│   ├── index.js                         # Express server with health check
+│   └── .env (create this)               # Server environment variables
+│
+├── 📁 components/                       # React Components
+│   ├── HomePage.tsx
+│   ├── LoginPage.tsx
+│   ├── SignupPage.tsx
+│   ├── CoursesPage.tsx
+│   ├── PricingPage.tsx
+│   ├── ProfilePage.tsx
+│   ├── PrivacyPolicyPage.tsx          # ✨ NEW
+│   ├── TermsOfServicePage.tsx         # ✨ NEW
+│   ├── CookiePolicyPage.tsx           # ✨ NEW
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   └── ... (other components)
+│
+├── 📁 context/                          # React Context
+│   └── ThemeContext.tsx
+│
+├── 📁 styles/                           # CSS Styles
+│   ├── theme.css
+│   └── utilities.css
+│
+├── 📁 utils/                            # Utility Functions
+│   └── audio.ts
+│
+├── 📁 dist/                             # Built Frontend (after npm run build)
+│   └── (generated files)
+│
+├── 📁 docs/                             # Documentation
+│   └── (project docs)
+│
+├── 📄 DEPLOYMENT FILES                   # ✨ AWS DEPLOYMENT
+│   │
+│   ├── 🚀 deploy.sh                     # Automated deployment script
+│   ├── 📋 appspec.yml                   # AWS CodeDeploy spec
+│   ├── 🏗️  buildspec.yml                # AWS CodeBuild spec
+│   ├── 📝 .env.example                  # Environment template
+│   │
+│   ├── 📖 DEPLOYMENT_SUMMARY.md         # ← START HERE! Overview
+│   ├── 📖 QUICK_AWS_DEPLOY.md           # 25-min deployment guide
+│   ├── 📖 AWS_DEPLOYMENT_GUIDE.md       # Complete reference
+│   └── 📖 DEPLOYMENT_README.md          # Detailed README
+│
+├── 📄 APPLICATION FILES
+│   ├── App.tsx                          # Main application
+│   ├── index.tsx                        # Entry point
+│   ├── index.html                       # HTML template
+│   ├── types.ts                         # TypeScript types
+│   ├── lessons.ts                       # Lesson content
+│   │
+│   ├── package.json                     # ✨ Updated with deploy scripts
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   ├── vite-env.d.ts
+│   │
+│   ├── .env (create this)               # Frontend environment variables
+│   ├── .env.example                     # Environment template
+│   ├── .gitignore                       # ✨ Updated for AWS
+│   └── README.md
+│
+└── 📁 node_modules/                     # Dependencies
+
+
+🎯 DEPLOYMENT OPTIONS
+=====================
+
+1. AUTOMATED DEPLOYMENT (5 min) ⚡
+   ┌─────────────────────────────────────┐
+   │ export EC2_HOST="your-ip"           │
+   │ export SSH_KEY="your-key.pem"       │
+   │ chmod +x deploy.sh                  │
+   │ ./deploy.sh                         │
+   └─────────────────────────────────────┘
+
+2. QUICK MANUAL (25 min) 📋
+   ┌─────────────────────────────────────┐
+   │ Follow: QUICK_AWS_DEPLOY.md         │
+   │ Copy-paste commands step-by-step    │
+   └─────────────────────────────────────┘
+
+3. ELASTIC BEANSTALK (15 min) 🌱
+   ┌─────────────────────────────────────┐
+   │ eb init                             │
+   │ eb create myenglish-production      │
+   │ eb deploy                           │
+   └─────────────────────────────────────┘
+
+
+📚 DOCUMENTATION GUIDE
+======================
+
+READ IN THIS ORDER:
+
+1. DEPLOYMENT_SUMMARY.md        ← Start here for overview
+   ↓
+2. QUICK_AWS_DEPLOY.md          ← For fast deployment
+   ↓
+3. AWS_DEPLOYMENT_GUIDE.md      ← For detailed reference
+   ↓
+4. DEPLOYMENT_README.md         ← For maintenance
+
+
+✅ PRE-DEPLOYMENT CHECKLIST
+===========================
+
+□ AWS account created
+□ EC2 instance launched (or ready to launch)
+□ SSH key (.pem file) downloaded
+□ RDS MySQL database running
+□ Security groups configured:
+  ✓ Port 22 (SSH)
+  ✓ Port 80 (HTTP)
+  ✓ Port 443 (HTTPS)
+  ✓ Port 3001 (Backend API)
+□ Gemini API key obtained
+□ Environment variables configured
+
+
+🔧 REQUIRED ENVIRONMENT VARIABLES
+==================================
+
+Frontend (.env):
+┌──────────────────────────────────────┐
+│ VITE_API_URL=http://your-ec2-ip     │
+│ VITE_API_KEY=your_gemini_api_key    │
+└──────────────────────────────────────┘
+
+Backend (server/.env):
+┌──────────────────────────────────────┐
+│ DB_HOST=database-1...rds.amazonaws.. │
+│ DB_USER=admin                        │
+│ DB_PASSWORD=myenglish2003           │
+│ DB_NAME=myenglish_db                │
+│ DB_PORT=3306                        │
+│ PORT=3001                           │
+│ NODE_ENV=production                 │
+└──────────────────────────────────────┘
+
+
+🎯 KEY COMMANDS
+===============
+
+Build & Deploy:
+  npm run build                → Build frontend
+  npm run server               → Start backend
+  npm run deploy:build         → Build + Start server
+  ./deploy.sh                  → Automated deployment
+
+Server Management (on EC2):
+  pm2 status                   → Check status
+  pm2 logs                     → View logs
+  pm2 restart myenglish-server → Restart server
+  sudo systemctl reload nginx  → Reload nginx
+
+
+🛡️ SECURITY FEATURES INCLUDED
+==============================
+
+✓ Health check endpoint (/health)
+✓ CORS configured
+✓ Environment variables protected
+✓ .gitignore updated
+✓ Nginx security headers
+✓ PM2 process management
+✓ Database connection pooling
+✓ Error handling
+
+
+💰 ESTIMATED COSTS
+==================
+
+Basic (100-1K users):     $17-32/month
+Production (1K-10K users): $69-84/month
+
+Includes:
+  • EC2 instance
+  • RDS MySQL database
+  • EBS storage
+  • Data transfer (first 100GB free)
+
+
+🎉 YOUR APPLICATION IS DEPLOYMENT-READY!
+=========================================
+
+Next Steps:
+  1. Read DEPLOYMENT_SUMMARY.md
+  2. Choose deployment method
+  3. Follow the guide
+  4. Deploy!
+
+Need Help?
+  • Check troubleshooting sections
+  • Review documentation
+  • Verify prerequisites
+
+Good luck with your deployment! 🚀
