@@ -18,14 +18,24 @@ app.use((err, req, res, next) => {
     next();
 });
 
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Database Configuration
 const dbConfig = {
-    host: 'database-1.ctaqimoaafgp.eu-north-1.rds.amazonaws.com',
-    user: 'admin',
-    password: 'myenglish2003',
-    port: 3306,
+    host: process.env.DB_HOST || 'database-1.ctaqimoaafgp.eu-north-1.rds.amazonaws.com',
+    user: process.env.DB_USER || 'admin',
+    password: process.env.DB_PASSWORD,  // MUST be set in .env file
+    port: parseInt(process.env.DB_PORT) || 3306,
     multipleStatements: true
 };
+
+// Validate required environment variables
+if (!dbConfig.password) {
+    console.error('ERROR: DB_PASSWORD environment variable is not set!');
+    process.exit(1);
+}
 
 // Create a connection to create the database if it doesn't exist
 // Note: mysql2/promise is better for async/await but callback style works if wrapped or used directly.
