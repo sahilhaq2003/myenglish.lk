@@ -428,8 +428,8 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 >
                                     {/* Thumbnail */}
                                     <div className="relative h-48 overflow-hidden">
-                                        <img 
-                                            src={course.thumbnail} 
+                                        <img
+                                            src={course.thumbnail}
                                             alt={course.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                         />
@@ -484,22 +484,9 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                         </div>
 
                                         <div className="flex items-center justify-between pt-4 border-t border-border">
-                                            <div>
-                                                {course.price === 'Premium' ? (
-                                                    <div>
-                                                        <div className="text-xs text-muted-foreground">Included in</div>
-                                                        <div className="text-lg font-bold text-primary">Premium</div>
-                                                    </div>
-                                                ) : (
-                                                    <div>
-                                                        <div className="text-xs text-muted-foreground">One-time</div>
-                                                        <div className="text-2xl font-bold text-foreground">${course.price}</div>
-                                                    </div>
-                                                )}
-                                            </div>
                                             <button
                                                 onClick={() => handleEnrollCourse(course)}
-                                                className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2"
+                                                className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
                                             >
                                                 Enroll Now
                                                 <Play size={16} />

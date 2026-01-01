@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, GraduationCap } from 'lucide-react';
 
 export function Footer() {
@@ -81,9 +82,9 @@ export function Footer() {
                         © {new Date().getFullYear()} MyEnglish.lk. All rights reserved.
                     </p>
                     <div className="flex gap-8 text-sm text-muted-foreground font-medium">
-                        <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-                        <a href="#" className="hover:text-primary transition-colors">Cookie Policy</a>
+                        <NavLink to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</NavLink>
+                        <NavLink to="/terms" className="hover:text-primary transition-colors">Terms of Service</NavLink>
+                        <NavLink to="/cookies" className="hover:text-primary transition-colors">Cookie Policy</NavLink>
                     </div>
                 </div>
             </div>
