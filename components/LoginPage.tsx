@@ -32,7 +32,11 @@ export function LoginPage() {
             localStorage.setItem('myenglish_userName', data.user.username);
             localStorage.setItem('myenglish_userEmail', data.user.email);
 
+            if (data.user.avatar_url) {
+                localStorage.setItem('myenglish_avatarUrl', data.user.avatar_url);
+            }
             navigate('/dashboard');
+
         } catch (err: any) {
             setError(err.message);
         } finally {
