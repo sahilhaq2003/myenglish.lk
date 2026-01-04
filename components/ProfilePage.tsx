@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Settings, ChevronLeft, Loader2, Save, Trash2, AlertTriangle, Calendar, Award, BookOpen, Clock, CheckCircle2, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Mail, Settings, ChevronLeft, Loader2, Save, Trash2, AlertTriangle, Calendar, Award, BookOpen, Clock, CheckCircle2, X, LogOut, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -29,6 +29,7 @@ export function ProfilePage() {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const displayToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToastMessage(message);
@@ -115,6 +116,10 @@ export function ProfilePage() {
 
                 console.log('Setting profile state with:', profileData);
                 setProfile(profileData);
+                // Sync avatar to local storage for Header/Dashboard access
+                if (data.avatar_url) {
+                    localStorage.setItem('myenglish_avatarUrl', data.avatar_url);
+                }
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -144,9 +149,11 @@ export function ProfilePage() {
             bio: profile.bio || '',
             phone: profile.phone || '',
             location: profile.location || '',
+
             current_level: profile.current_level || 'Not assessed yet',
             learning_goal: profile.learning_goal || 'Professional Communication',
-            daily_goal: profile.daily_goal || 20
+            daily_goal: profile.daily_goal || 20,
+            avatar_url: profile.avatar_url
         };
 
         console.log('Saving profile data:', profileToSave);
@@ -169,6 +176,9 @@ export function ProfilePage() {
                     : profile.username || 'User';
 
                 localStorage.setItem('myenglish_userName', displayName);
+                if (profile.avatar_url) {
+                    localStorage.setItem('myenglish_avatarUrl', profile.avatar_url);
+                }
 
                 // Refetch profile from database to ensure we have the latest data
                 await fetchProfile();
@@ -185,6 +195,25 @@ export function ProfilePage() {
             displayToast('Network error: Could not connect to server. Please check if the server is running.', 'error');
         } finally {
             setSaving(false);
+        }
+    };
+
+
+
+    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Check file size (limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                displayToast('Image size too large. Please choose an image under 5MB.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfile(prev => ({ ...prev, avatar_url: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -237,6 +266,21 @@ export function ProfilePage() {
         }
     };
 
+    const handleLogout = () => {
+        // Clear all user data from localStorage
+        localStorage.removeItem('myenglish_token');
+        localStorage.removeItem('myenglish_userName');
+        localStorage.removeItem('myenglish_userEmail');
+        localStorage.removeItem('myenglish_apiKey');
+
+        // Show success message and navigate to home
+        displayToast('Logged out successfully. See you soon!', 'success');
+        setTimeout(() => {
+            navigate('/');
+        }, 1000);
+    };
+
+
     const learningGoals = [
         'Professional Communication',
         'Academic English',
@@ -269,11 +313,24 @@ export function ProfilePage() {
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-10" />
 
                         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 pt-4">
-                            <div className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 shadow-xl overflow-hidden bg-white">
+                            <div
+                                className="w-32 h-32 rounded-full border-4 border-white dark:border-zinc-800 shadow-xl overflow-hidden bg-white cursor-pointer group relative"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
                                 <img
-                                    src={`https://ui-avatars.com/api/?name=${profile.username || 'User'}&background=random&size=256`}
+                                    src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username || 'User'}&background=random&size=256`}
                                     alt="Profile"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                                    <Camera className="text-white drop-shadow-lg" size={32} />
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                    accept="image/*"
                                 />
                             </div>
 
@@ -433,6 +490,24 @@ export function ProfilePage() {
                                 </div>
                             </div>
 
+                            {/* Logout Section */}
+                            <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-[2rem] p-8 shadow-sm">
+                                <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-foreground">
+                                    <LogOut size={22} className="text-indigo-600 dark:text-indigo-400" />
+                                    Session
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                                    Ready to take a break? You can log out safely and return anytime.
+                                </p>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full py-3.5 bg-white dark:bg-indigo-950/50 border-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-300 dark:hover:border-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <LogOut size={18} />
+                                    Log Out
+                                </button>
+                            </div>
+
                             {/* Danger Zone */}
                             <div className="bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-[2rem] p-8 shadow-sm">
                                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-red-600">
@@ -504,12 +579,12 @@ export function ProfilePage() {
             {showToast && (
                 <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
                     <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 min-w-[320px] max-w-md ${toastType === 'success'
-                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                         }`}>
                         <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${toastType === 'success'
-                                ? 'bg-green-100 dark:bg-green-900/40'
-                                : 'bg-red-100 dark:bg-red-900/40'
+                            ? 'bg-green-100 dark:bg-green-900/40'
+                            : 'bg-red-100 dark:bg-red-900/40'
                             }`}>
                             {toastType === 'success' ? (
                                 <CheckCircle2 size={24} className="text-green-600 dark:text-green-400" />
@@ -519,14 +594,14 @@ export function ProfilePage() {
                         </div>
                         <div className="flex-1">
                             <p className={`font-bold text-sm ${toastType === 'success'
-                                    ? 'text-green-900 dark:text-green-100'
-                                    : 'text-red-900 dark:text-red-100'
+                                ? 'text-green-900 dark:text-green-100'
+                                : 'text-red-900 dark:text-red-100'
                                 }`}>
                                 {toastType === 'success' ? 'Success!' : 'Error'}
                             </p>
                             <p className={`text-sm ${toastType === 'success'
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : 'text-red-700 dark:text-red-300'
+                                ? 'text-green-700 dark:text-green-300'
+                                : 'text-red-700 dark:text-red-300'
                                 }`}>
                                 {toastMessage}
                             </p>
@@ -534,8 +609,8 @@ export function ProfilePage() {
                         <button
                             onClick={() => setShowToast(false)}
                             className={`flex-shrink-0 p-1 rounded-lg transition-colors ${toastType === 'success'
-                                    ? 'hover:bg-green-100 dark:hover:bg-green-900/40 text-green-700 dark:text-green-300'
-                                    : 'hover:bg-red-100 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300'
+                                ? 'hover:bg-green-100 dark:hover:bg-green-900/40 text-green-700 dark:text-green-300'
+                                : 'hover:bg-red-100 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300'
                                 }`}
                         >
                             <X size={18} />

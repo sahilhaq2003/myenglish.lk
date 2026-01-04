@@ -188,7 +188,7 @@ export function PrivacyPolicyPage() {
                         </p>
                         <div className="bg-secondary/30 rounded-lg p-6 space-y-2">
                             <p className="text-foreground"><strong>Email:</strong> sahilhaq2003@gmail.com</p>
-                            <p className="text-foreground"><strong>Phone:</strong> 0767589002</p>
+
                             <p className="text-foreground"><strong>Address:</strong> MyEnglish.lk, Sri Lanka</p>
                         </div>
                     </section>

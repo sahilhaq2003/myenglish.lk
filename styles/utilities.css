@@ -3,6 +3,12 @@
    MyEnglish.lk - Professional Layout System
    ============================================ */
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--space-20);
+    /* Offset for fixed header */
+}
+
 /* ===== CONTAINER SYSTEM ===== */
 .container {
     width: 100%;

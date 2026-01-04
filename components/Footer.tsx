@@ -25,7 +25,7 @@ export function Footer() {
                                 <a
                                     key={i}
                                     href="#"
-                                    className="w-10 h-10 bg-secondary hover:bg-primary hover:text-white rounded-full flex items-center justify-center transition-all text-muted-foreground"
+                                    className="w-10 h-10 bg-gray-100 dark:bg-zinc-800 hover:bg-primary hover:text-white rounded-full flex items-center justify-center transition-all text-muted-foreground"
                                 >
                                     <Icon size={18} />
                                 </a>
@@ -69,10 +69,7 @@ export function Footer() {
                                 <Mail size={20} className="text-primary mt-1 shrink-0" />
                                 <span>sahilhaq2003@gmail.com</span>
                             </li>
-                            <li className="flex items-start gap-3 text-muted-foreground">
-                                <Phone size={20} className="text-primary mt-1 shrink-0" />
-                                <span>0767589002</span>
-                            </li>
+
                         </ul>
                     </div>
                 </div>

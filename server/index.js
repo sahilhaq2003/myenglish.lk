@@ -2,12 +2,13 @@ import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import learningRoutes from './routes/learning.js';
 
 const app = express();
 const PORT = 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Error handling for JSON parsing
 app.use((err, req, res, next) => {
@@ -18,9 +19,15 @@ app.use((err, req, res, next) => {
     next();
 });
 
-// Load environment variables
+// Load environment variables from server/.env
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '.env') });
 
 // Database Configuration
 const dbConfig = {
@@ -41,30 +48,29 @@ if (!dbConfig.password) {
 // Note: mysql2/promise is better for async/await but callback style works if wrapped or used directly.
 // We'll stick to basic mysql2 for simplicity here or use connection.
 
-const initialConnection = mysql.createConnection(dbConfig);
-
-initialConnection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to RDS instance:', err);
-        return;
-    }
-    console.log('Connected to RDS instance.');
-
-    // Create Database
-    initialConnection.query("CREATE DATABASE IF NOT EXISTS myenglish_db", (err) => {
+// Initial Connection Logic (Dev Only)
+if (process.env.NODE_ENV !== 'production') {
+    const initialConnection = mysql.createConnection(dbConfig);
+    initialConnection.connect((err) => {
         if (err) {
-            console.error('Error creating database:', err);
-            // Fallback: If we can't create DB, maybe we don't have permissions or it exists.
-            // We will try to proceed by connecting to the DB if created, or fail later.
-            // But we need to switch to the DB.
+            console.error('Error connecting to RDS instance:', err);
+            return;
         }
-        console.log('Database myenglish_db checked/created.');
-        initialConnection.end();
-
-        // Start the main pool with the database selected
-        startServer();
+        console.log('Connected to RDS instance.');
+        initialConnection.query("CREATE DATABASE IF NOT EXISTS myenglish_db", (err) => {
+            if (err) console.error('Error creating database:', err);
+            console.log('Database myenglish_db checked/created.');
+            initialConnection.end();
+            startServer();
+            app.listen(PORT, () => {
+                console.log(`Server running on http://localhost:${PORT}`);
+            });
+        });
     });
-});
+} else {
+    // Production/Vercel: Just start the server configuration
+    startServer();
+}
 
 let pool;
 
@@ -103,7 +109,7 @@ function startServer() {
         "ADD COLUMN bio TEXT",
         "ADD COLUMN phone VARCHAR(20)",
         "ADD COLUMN location VARCHAR(100)",
-        "ADD COLUMN avatar_url VARCHAR(255)",
+        "ADD COLUMN avatar_url LONGTEXT",
         "ADD COLUMN current_level VARCHAR(50) DEFAULT 'Not assessed yet'",
         "ADD COLUMN learning_goal VARCHAR(100) DEFAULT 'General Fluency'",
         "ADD COLUMN daily_goal INT DEFAULT 20",
@@ -118,6 +124,12 @@ function startServer() {
                 // console.error(`Error adding column ${col}:`, err.message);
             }
         });
+    });
+
+    // Ensure avatar_url is LONGTEXT (migration for existing VARCHAR users)
+    pool.query("ALTER TABLE users MODIFY COLUMN avatar_url LONGTEXT", (err) => {
+        // Ignore if already LONGTEXT or other non-critical errors
+        if (err) console.log("Note: Avatar column modify check:", err.code);
     });
     console.log('Profile columns verified.');
 
@@ -149,6 +161,12 @@ function startServer() {
             console.log('Enrollments table checked/created.');
         }
     });
+
+    // =====================================================
+    // LEARNING PLATFORM ROUTES
+    // =====================================================
+    app.use('/api/learning', learningRoutes);
+    console.log('✅ Learning platform routes loaded successfully');
 
     // Health Check Endpoint (for load balancers and monitoring)
     app.get('/health', (req, res) => {
@@ -271,19 +289,21 @@ function startServer() {
 
     // Update Profile
     app.put('/api/profile', (req, res) => {
-        const { email, username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level } = req.body;
+        const { email, username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level, avatar_url } = req.body;
 
         console.log('Update profile request received for:', email);
-        console.log('Update data:', { username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level });
+        // console.log('Update data:', { username, bio, phone, location, learning_goal, daily_goal, first_name, birthday, current_level }); // Reduced logging for privacy/size
 
         if (!email) return res.status(400).json({ message: 'Email required' });
 
         // Sanitize date for MySQL (empty string, null, or undefined -> null)
-        // If birthday has a valid date value, keep it, otherwise set to null
         const birthdayVal = (birthday && birthday !== '') ? birthday : null;
         const phoneVal = (phone && phone !== '') ? phone : null;
         const locationVal = (location && location !== '') ? location : null;
         const bioVal = (bio && bio !== '') ? bio : null;
+
+        // Only update avatar_url if provided (avoid overwriting with null if not sent, though frontend should send it)
+        // Actually, let's just update all fields. 
 
         const query = `UPDATE users SET 
             username = ?, 
@@ -294,12 +314,13 @@ function startServer() {
             daily_goal = ?, 
             first_name = ?, 
             birthday = ?,
-            current_level = ?
+            current_level = ?,
+            avatar_url = ?
             WHERE email = ?`;
 
-        console.log('Executing update query with values:', [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email]);
+        const values = [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, avatar_url || null, email];
 
-        pool.query(query, [username, bioVal, phoneVal, locationVal, learning_goal, daily_goal, first_name, birthdayVal, current_level, email], (err, result) => {
+        pool.query(query, values, (err, result) => {
             if (err) {
                 console.error('Error updating profile:', err);
                 return res.status(500).json({ message: 'Server error updating profile', error: err.message });
@@ -357,8 +378,26 @@ function startServer() {
                 console.error('Error fetching enrollments:', err);
                 return res.status(500).json({ message: 'Server error fetching enrollments' });
             }
-            console.log('Enrollments fetched:', results.length);
-            res.json(results);
+
+
+            // Map old course IDs to new learning platform IDs
+            const courseIdMapping = {
+                '1': 'course_beginner_english',          // Complete English Grammar Mastery
+                '2': 'course_ielts_prep',                // IELTS 8+ Band Guaranteed
+                '3': 'course_business_english',          // Business English for Professionals
+                '4': 'course_american_accent',           // American Accent Training
+                '5': 'course_conversational_beginners',  // Conversational English Beginners
+                '6': 'course_advanced_writing'           // Advanced Writing & Composition
+            };
+
+            // Add learning_course_id to each enrollment
+            const mappedResults = results.map(enrollment => ({
+                ...enrollment,
+                learning_course_id: courseIdMapping[enrollment.course_id] || enrollment.course_id
+            }));
+
+            console.log('Enrollments fetched:', mappedResults.length);
+            res.json(mappedResults);
         });
     });
 
@@ -468,7 +507,6 @@ function startServer() {
         });
     });
 
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-    });
 }
+
+export default app;

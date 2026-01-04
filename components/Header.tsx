@@ -149,7 +149,7 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                                 className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/20 transition-all overflow-hidden"
                             >
                                 <img
-                                    src={`https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
+                                    src={localStorage.getItem('myenglish_avatarUrl') || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
@@ -222,7 +222,7 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                             </button>
                         </div>
                     </div>
-                    
+
                     {localStorage.getItem('myenglish_token') === 'logged_in' ? (
                         <>
                             <button
