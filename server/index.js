@@ -210,8 +210,8 @@ function startServer() {
                     if (err.code === 'ER_DUP_ENTRY') {
                         return res.status(409).json({ message: 'Email already exists' });
                     }
-                    console.error(err);
-                    return res.status(500).json({ message: 'Server error' });
+                    console.error('Signup DB Error:', err);
+                    return res.status(500).json({ message: 'Server error', error: err.message, stack: err.stack });
                 }
                 res.status(201).json({ message: 'User created successfully', userId: result.insertId });
             });
@@ -231,8 +231,8 @@ function startServer() {
         const query = 'SELECT * FROM users WHERE email = ?';
         pool.query(query, [email], async (err, results) => {
             if (err) {
-                console.error(err);
-                return res.status(500).json({ message: 'Server error' });
+                console.error('Login DB Error:', err);
+                return res.status(500).json({ message: 'Server error', error: err.message, stack: err.stack });
             }
 
             if (results.length === 0) {
