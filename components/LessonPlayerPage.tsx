@@ -364,24 +364,23 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                 onExploreCourses={() => navigate('/courses')}
             />
 
-            <main className="flex-1 pt-24 pb-8 px-4 sm:px-8 max-w-7xl mx-auto w-full flex flex-col items-center">
+            <main className="flex-1 pt-20 sm:pt-24 pb-4 sm:pb-8 px-4 sm:px-8 max-w-7xl mx-auto w-full flex flex-col items-center">
                 {/* Header Section */}
-                <div className="w-full text-center mb-8 relative z-10 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50/50 dark:bg-indigo-500/10 backdrop-blur-md border border-indigo-100 dark:border-indigo-500/20 rounded-full text-xs font-bold mb-6 text-indigo-600 dark:text-indigo-400 uppercase tracking-widest shadow-sm">
+                <div className="w-full text-center mb-6 sm:mb-8 relative z-10 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-indigo-50/50 dark:bg-indigo-500/10 backdrop-blur-md border border-indigo-100 dark:border-indigo-500/20 rounded-full text-[10px] sm:text-xs font-bold mb-4 sm:mb-6 text-indigo-600 dark:text-indigo-400 uppercase tracking-widest shadow-sm">
                         <Sparkles size={12} />
                         {lesson.lesson_type} • {lesson.difficulty_level}
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
+                    <h1 className="text-3xl sm:text-5xl md:text-6xl font-black mb-4 sm:mb-6 tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
                         {lesson.title}
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium">
                         {lesson.description}
                     </p>
                 </div>
 
                 {/* Navigation Back */}
-                {/* Navigation Back */}
-                <div className="w-full max-w-4xl mb-8 flex justify-start z-20 relative">
+                <div className="w-full max-w-4xl mb-6 sm:mb-8 flex justify-start z-20 relative">
                     <button
                         onClick={() => {
                             if ((lesson as any).course_id) {
@@ -390,35 +389,35 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                                 navigate(-1);
                             }
                         }}
-                        className="group flex items-center gap-3 pl-2 pr-6 py-2.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
+                        className="group flex items-center gap-2 sm:gap-3 pl-1.5 sm:pl-2 pr-4 sm:pr-6 py-2 sm:py-2.5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
                     >
-                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 flex items-center justify-center transition-all">
-                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 flex items-center justify-center transition-all">
+                            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform sm:w-4 sm:h-4" />
                         </div>
-                        <span className="font-bold text-sm tracking-wide">Back to Modules</span>
+                        <span className="font-bold text-xs sm:text-sm tracking-wide">Back to Modules</span>
                     </button>
                 </div>
 
                 {/* Voice Interaction Area */}
-                <div className="w-full max-w-4xl flex-1 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 overflow-hidden flex flex-col relative h-[650px] ring-1 ring-slate-900/5">
+                <div className="w-full max-w-4xl flex-1 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 overflow-hidden flex flex-col relative min-h-[500px] h-[calc(100vh-280px)] sm:h-[650px] ring-1 ring-slate-900/5">
                     {/* Visualizer Header */}
-                    <div className="p-6 border-b border-border bg-muted/30 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-col gap-4">
+                    <div className="p-4 sm:p-6 border-b border-border bg-muted/30 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-col gap-3 sm:gap-4">
                         <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-3 h-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]' : 'bg-gray-400'}`} />
-                                <span className="font-bold text-sm tracking-wide">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]' : 'bg-gray-400'}`} />
+                                <span className="font-bold text-xs sm:text-sm tracking-wide">
                                     {isLive ? (hasStarted ? "AI TEACHING LIVE" : "LISTENING FOR 'START'") : "VIRTUAL CLASSROOM"}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <div className="hidden md:flex items-center gap-2 text-xs font-bold font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                            <div className="flex items-center gap-2 sm:gap-4">
+                                <div className="hidden sm:flex items-center gap-2 text-xs font-bold font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
                                     <Clock size={12} className="opacity-70" />
                                     <span>
                                         {Math.floor(timeSpent / 60).toString().padStart(2, '0')}:
                                         {(timeSpent % 60).toString().padStart(2, '0')}
                                     </span>
                                 </div>
-                                <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-center gap-2">
+                                <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-center gap-1.5 sm:gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
                                     {Math.round(progressPercentage)}% Complete
                                 </div>
@@ -426,7 +425,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="w-full h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear"
                                 style={{ width: `${progressPercentage}%` }}
@@ -437,46 +436,46 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                     {/* Transcription / Content Area */}
                     <div
                         ref={transcriptionContainerRef}
-                        className="flex-1 overflow-y-auto p-8 pt-28 pb-32 space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm"
+                        className="flex-1 overflow-y-auto p-4 sm:p-8 pt-24 sm:pt-28 pb-28 sm:pb-32 space-y-4 sm:space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm"
                     >
                         {!isLive ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
-                                <div className="w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-2">
-                                    <Sparkles size={48} className="text-indigo-600 dark:text-indigo-400" />
+                            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 animate-in fade-in zoom-in duration-500 px-4">
+                                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-2">
+                                    <Sparkles size={40} className="sm:w-12 sm:h-12 text-indigo-600 dark:text-indigo-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-bold mb-2">Ready to Learn?</h3>
-                                    <p className="text-muted-foreground max-w-md">
+                                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Ready to Learn?</h3>
+                                    <p className="text-sm sm:text-base text-muted-foreground max-w-md">
                                         Join the live voice class. The AI teacher will guide you through the entire lesson interactively.
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-8 max-w-3xl mx-auto h-full flex flex-col">
+                            <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto h-full flex flex-col">
                                 {!hasStarted && (
-                                    <div className="flex justify-center mb-8">
-                                        <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-8 py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-3 transform hover:scale-105 transition-transform">
-                                            <Mic size={20} />
-                                            Please say "START" to begin the lesson
+                                    <div className="flex justify-center mb-4 sm:mb-8">
+                                        <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform text-sm sm:text-base">
+                                            <Mic size={18} className="sm:w-5 sm:h-5" />
+                                            Please say "START" to begin
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Dedicated Transcription Box */}
-                                <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md">
+                                <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md">
                                     <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
 
-                                    <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-4 pt-4 relative">
+                                    <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar pr-2 sm:pr-4 pt-4 relative">
                                         {outputTranscription ? (
                                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                                                 <div className="flex items-center gap-3 mb-4 sticky top-0 bg-white/90 dark:bg-slate-900/90 py-2 z-10 backdrop-blur-sm rounded-lg">
-                                                    <div className="flex items-center gap-2 px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
-                                                        <Sparkles size={12} fill="currentColor" />
+                                                    <div className="flex items-center gap-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-indigo-600 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
+                                                        <Sparkles size={10} className="sm:w-3 sm:h-3" fill="currentColor" />
                                                         AI Teacher
                                                     </div>
                                                     <span className="text-[10px] text-muted-foreground font-mono">{debugStatus}</span>
                                                 </div>
-                                                <p className="text-xl md:text-2xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
+                                                <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
                                                     {outputTranscription}
                                                     {isAiSpeakingRef.current && (
                                                         <span className="inline-block ml-2 w-2 h-4 bg-indigo-500 animate-pulse align-middle" />
@@ -485,19 +484,19 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                                             </div>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
-                                                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
-                                                    <Volume2 size={32} className="text-indigo-500" />
+                                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
+                                                    <Volume2 size={24} className="sm:w-8 sm:h-8 text-indigo-500" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-lg text-foreground font-bold">
+                                                    <p className="text-base sm:text-lg text-foreground font-bold">
                                                         {isAiSpeakingRef.current ? "Teacher is speaking..." : "Waiting for teacher..."}
                                                     </p>
                                                     {isAiSpeakingRef.current && (
-                                                        <p className="text-sm text-indigo-600 font-medium mt-2 animate-pulse">
+                                                        <p className="text-xs sm:text-sm text-indigo-600 font-medium mt-2 animate-pulse">
                                                             (Listening to audio stream...)
                                                         </p>
                                                     )}
-                                                    <p className="text-xs text-muted-foreground mt-2 font-mono">Status: {debugStatus}</p>
+                                                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 font-mono">Status: {debugStatus}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -507,9 +506,9 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
 
                                     {/* User Input Overlay - Compact */}
                                     {inputTranscription && (
-                                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-8 -mb-8 p-6 text-sm">
+                                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 p-4 sm:p-6 text-xs sm:text-sm">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
+                                                <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
                                             </div>
                                             <p className="text-slate-700 dark:text-slate-300 font-medium">{inputTranscription}</p>
                                         </div>
@@ -520,29 +519,29 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                     </div>
 
                     {/* Bottom Controls */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
-                        <div className="flex items-center justify-center gap-6">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
+                        <div className="flex items-center justify-center gap-4 sm:gap-6">
                             {!isLive ? (
                                 <button
                                     onClick={startVoiceSession}
-                                    className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-lg shadow-xl shadow-indigo-500/30 hover:scale-105 transition-all flex items-center gap-3"
+                                    className="px-6 py-3 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-base sm:text-lg shadow-xl shadow-indigo-500/30 hover:scale-105 transition-all flex items-center gap-2 sm:gap-3"
                                 >
-                                    <Mic size={24} />
+                                    <Mic size={20} className="sm:w-6 sm:h-6" />
                                     Enter Classroom
                                 </button>
                             ) : (
-                                <div className="flex items-center gap-6">
-                                    <div className="flex items-end gap-4 p-2 bg-card border border-border rounded-full shadow-2xl">
+                                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
+                                    <div className="flex items-end gap-3 sm:gap-4 p-1.5 sm:p-2 bg-card border border-border rounded-full shadow-2xl w-full sm:w-auto justify-between sm:justify-start">
                                         <button
                                             onClick={stopAudio}
-                                            className="w-14 h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                                            className="w-12 h-12 sm:w-14 sm:h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all shrink-0"
                                             title="End Session"
                                         >
-                                            <MicOff size={24} />
+                                            <MicOff size={20} className="sm:w-6 sm:h-6" />
                                         </button>
-                                        <div className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex gap-1 h-4 items-end">
+                                        <div className="px-4 sm:px-6 py-3 sm:py-4 flex-1 sm:flex-none">
+                                            <div className="flex items-center gap-2 sm:gap-3 justify-center">
+                                                <div className="flex gap-1 h-3 sm:h-4 items-end">
                                                     {[...Array(5)].map((_, i) => (
                                                         <div
                                                             key={i}
@@ -551,7 +550,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                                                         />
                                                     ))}
                                                 </div>
-                                                <span className="font-bold text-sm text-muted-foreground uppercase tracking-widest">
+                                                <span className="font-bold text-xs sm:text-sm text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                                                     {isAiSpeakingRef.current ? "Teacher Speaking..." : "Listening..."}
                                                 </span>
                                             </div>
@@ -578,12 +577,12 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                                             stopAudio();
                                             navigate('/dashboard'); // Go back to dashboard after completing
                                         }}
-                                        className={`px-6 py-4 rounded-full font-bold text-lg shadow-xl flex items-center gap-2 transition-all ${isCompletionEnabled
+                                        className={`px-6 py-3 sm:px-6 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto ${isCompletionEnabled
                                             ? 'bg-green-500 hover:bg-green-600 text-white hover:scale-105 animate-pulse'
                                             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                             }`}
                                     >
-                                        {isCompletionEnabled ? <CheckCircle2 size={24} /> : <Loader2 size={24} className="animate-spin" />}
+                                        {isCompletionEnabled ? <CheckCircle2 size={20} className="sm:w-6 sm:h-6" /> : <Loader2 size={20} className="animate-spin sm:w-6 sm:h-6" />}
                                         {isCompletionEnabled ? 'Complete' : `${Math.round(sessionProgress)}%`}
                                     </button>
                                 </div>

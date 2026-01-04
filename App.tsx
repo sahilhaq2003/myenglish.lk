@@ -3006,53 +3006,53 @@ EXAMPLE OPENING:
   };
 
   const ModuleLearningView = () => (
-    <div className="min-h-screen bg-muted p-6">
+    <div className="min-h-screen bg-muted p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-card rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+        <div className="bg-card rounded-[2rem] sm:rounded-[2.5rem] shadow-xl p-4 sm:p-8 mb-4 sm:mb-6 border border-indigo-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => {
                   stopAudio();
                   setShowModuleSession(false);
                   setCurrentModule(null);
                 }}
-                className="w-12 h-12 bg-secondary hover:bg-muted rounded-xl flex items-center justify-center transition-all"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary hover:bg-muted rounded-xl flex items-center justify-center transition-all shrink-0"
               >
-                <ArrowRight size={24} className="rotate-180" />
+                <ArrowRight size={20} className="rotate-180 sm:w-6 sm:h-6" />
               </button>
               <div>
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">{currentModule?.type} Lesson</span>
-                <h1 className="text-3xl font-black text-foreground">{currentModule?.title}</h1>
+                <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">{currentModule?.type} Lesson</span>
+                <h1 className="text-xl sm:text-3xl font-black text-foreground leading-tight">{currentModule?.title}</h1>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold">
+            <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
+              <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-50 text-indigo-700 rounded-xl text-xs sm:text-sm font-bold">
                 {currentModule?.level}
               </div>
-              <div className="w-12 h-12 bg-indigo-100 text-primary rounded-xl flex items-center justify-center">
-                {currentModule?.type === 'Grammar' && <Book size={24} />}
-                {currentModule?.type === 'Vocabulary' && <Sparkles size={24} />}
-                {currentModule?.type === 'Speaking' && <Mic size={24} />}
-                {currentModule?.type === 'Listening' && <Headphones size={24} />}
-                {currentModule?.type === 'Reading' && <BookOpen size={24} />}
-                {currentModule?.type === 'Writing' && <FileText size={24} />}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 text-primary rounded-xl flex items-center justify-center">
+                {currentModule?.type === 'Grammar' && <Book size={20} className="sm:w-6 sm:h-6" />}
+                {currentModule?.type === 'Vocabulary' && <Sparkles size={20} className="sm:w-6 sm:h-6" />}
+                {currentModule?.type === 'Speaking' && <Mic size={20} className="sm:w-6 sm:h-6" />}
+                {currentModule?.type === 'Listening' && <Headphones size={20} className="sm:w-6 sm:h-6" />}
+                {currentModule?.type === 'Reading' && <BookOpen size={20} className="sm:w-6 sm:h-6" />}
+                {currentModule?.type === 'Writing' && <FileText size={20} className="sm:w-6 sm:h-6" />}
               </div>
             </div>
           </div>
 
           {/* Progress */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-secondary rounded-full h-2 overflow-hidden">
+            <div className="flex-1 bg-secondary rounded-full h-1.5 sm:h-2 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear"
                 style={{ width: `${sessionProgress}%` }}
               />
             </div>
-            <span className="text-sm font-bold text-muted-foreground">{Math.round(sessionProgress)}%</span>
+            <span className="text-xs sm:text-sm font-bold text-muted-foreground">{Math.round(sessionProgress)}%</span>
             {isCompletionEnabled && (
-              <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full animate-pulse">
+              <span className="text-[10px] sm:text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full animate-pulse whitespace-nowrap">
                 Ready to Complete
               </span>
             )}
@@ -3060,76 +3060,76 @@ EXAMPLE OPENING:
         </div>
 
         {/* AI Teacher Card */}
-        <div className="bg-card rounded-[2.5rem] shadow-xl p-10 mb-6 border border-indigo-100">
-          <div className="flex items-center gap-6 mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <User size={40} className="text-white" />
+        <div className="bg-card rounded-[2rem] sm:rounded-[2.5rem] shadow-xl p-6 sm:p-10 mb-4 sm:mb-6 border border-indigo-100">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 sm:mb-8 text-center sm:text-left">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+              <User size={32} className="text-white sm:w-10 sm:h-10" />
             </div>
             <div className="flex-1">
-              <h3 className="text-2xl font-bold text-foreground mb-1">{currentPersona?.name}</h3>
-              <p className="text-muted-foreground">{currentPersona?.role}</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1">{currentPersona?.name}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">{currentPersona?.role}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => startModuleLearning(currentModule!)}
                 disabled={isLive}
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${isLive
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${isLive
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-gradient-to-br from-green-500 to-emerald-600 hover:scale-110 hover:from-green-600 hover:to-emerald-700'
                   }`}
               >
-                <Mic size={28} className="text-white" />
+                <Mic size={24} className="text-white sm:w-7 sm:h-7" />
               </button>
               <button
                 onClick={() => stopAudio()}
                 disabled={!isLive}
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${!isLive
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${!isLive
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-red-500 hover:scale-110 hover:bg-red-600'
                   }`}
               >
-                <MicOff size={28} className="text-white" />
+                <MicOff size={24} className="text-white sm:w-7 sm:h-7" />
               </button>
             </div>
           </div>
 
           {/* Lesson Content Box */}
-          <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md min-h-[500px]">
+          <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md min-h-[400px] sm:min-h-[500px]">
             <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
 
             {/* AI Teacher Output */}
-            <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-4 pt-4 relative">
+            <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar pr-2 sm:pr-4 pt-4 relative">
               {outputTranscription ? (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                   <div className="flex items-center gap-3 mb-4 sticky top-0">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
-                      <Sparkles size={12} />
+                    <div className="flex items-center gap-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
+                      <Sparkles size={10} className="sm:w-3 sm:h-3" />
                       AI Teacher
                     </div>
                   </div>
-                  <p className="text-xl md:text-2xl leading-relaxed text-slate-800 dark:text-slate-100 font-medium whitespace-pre-wrap">
+                  <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-slate-800 dark:text-slate-100 font-medium whitespace-pre-wrap">
                     {outputTranscription}
                   </p>
                 </div>
               ) : !isLive ? (
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-60 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <MessageSquare size={32} className="text-slate-400" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <MessageSquare size={24} className="text-slate-400 sm:w-8 sm:h-8" />
                   </div>
                   <div>
-                    <p className="text-lg text-slate-500 font-medium">Virtual Classroom Ready</p>
-                    <p className="text-sm text-slate-400">Click the microphone to start</p>
+                    <p className="text-base sm:text-lg text-slate-500 font-medium">Virtual Classroom Ready</p>
+                    <p className="text-xs sm:text-sm text-slate-400">Click the microphone to start</p>
                   </div>
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
                   <div className="flex justify-center">
-                    <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-8 py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-3 transform hover:scale-105 transition-transform" onClick={() => { /* Start functionality handled by voice */ }}>
-                      <Mic size={24} />
+                    <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform cursor-pointer" onClick={() => { /* Start functionality handled by voice */ }}>
+                      <Mic size={20} className="sm:w-6 sm:h-6" />
                       Say "START" to begin
                     </div>
                   </div>
-                  <p className="text-slate-500 max-w-sm mx-auto">
+                  <p className="text-slate-500 text-sm sm:text-base max-w-sm mx-auto">
                     Your teacher is listening. Say "Start" to begin the lesson on <span className="text-slate-900 dark:text-white font-bold">{currentModule?.title}</span>.
                   </p>
                 </div>
@@ -3138,10 +3138,10 @@ EXAMPLE OPENING:
 
             {/* Teacher Thinking Indicator */}
             {isThinking && (
-              <div className="absolute top-6 right-6 flex gap-1 z-20">
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-200" />
+              <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex gap-1 z-20">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce delay-100" />
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce delay-200" />
               </div>
             )}
 
@@ -3149,9 +3149,9 @@ EXAMPLE OPENING:
 
             {/* User Input Overlay/Bottom */}
             {inputTranscription && (
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-8 -mb-8 p-6 text-sm">
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 p-4 sm:p-6 text-xs sm:text-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
                 </div>
                 <p className="text-slate-700 dark:text-slate-300 font-medium">{inputTranscription}</p>
               </div>
@@ -3160,17 +3160,17 @@ EXAMPLE OPENING:
 
           {/* Connection Error */}
           {connectionError && (
-            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-6">
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <AlertCircle size={24} className="text-red-500" />
+                <AlertCircle size={20} className="text-red-500 sm:w-6 sm:h-6" />
                 <div className="flex-1">
-                  <p className="text-red-800 font-medium">{connectionError}</p>
+                  <p className="text-red-800 text-sm sm:text-base font-medium">{connectionError}</p>
                   <button
                     onClick={() => {
                       setConnectionError(null);
                       startModuleLearning(currentModule!);
                     }}
-                    className="text-red-600 text-sm font-bold mt-2 hover:underline"
+                    className="text-red-600 text-xs sm:text-sm font-bold mt-2 hover:underline"
                   >
                     Try Again
                   </button>
@@ -3181,7 +3181,7 @@ EXAMPLE OPENING:
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <button
             disabled={!isCompletionEnabled}
             onClick={async () => {
@@ -3229,10 +3229,10 @@ EXAMPLE OPENING:
               // Refresh progress data to ensure UI reflects backend state
               // We'll call a refresh if we have a function for it, or just let the user navigate
             }}
-            className={`py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-2 transition-all ${!isCompletionEnabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:scale-105 animate-pulse'
+            className={`py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all ${!isCompletionEnabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:scale-105 animate-pulse'
               }`}
           >
-            {isCompletionEnabled ? <CheckCircle2 size={24} /> : <Loader2 size={24} className="animate-spin" />}
+            {isCompletionEnabled ? <CheckCircle2 size={20} className="sm:w-6 sm:h-6" /> : <Loader2 size={20} className="animate-spin sm:w-6 sm:h-6" />}
             {isCompletionEnabled ? 'Complete Lesson' : `${Math.round(sessionProgress)}% Complete`}
           </button>
           <button
@@ -3241,7 +3241,7 @@ EXAMPLE OPENING:
               setShowModuleSession(false);
               setCurrentModule(null);
             }}
-            className="py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg shadow-sm hover:bg-gray-200 transition-all"
+            className="py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-base sm:text-lg shadow-sm hover:bg-gray-200 transition-all"
           >
             Save & Exit
           </button>
