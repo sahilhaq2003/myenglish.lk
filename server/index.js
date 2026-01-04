@@ -35,7 +35,10 @@ const dbConfig = {
     user: process.env.DB_USER || 'admin',
     password: process.env.DB_PASSWORD,  // MUST be set in .env file
     port: parseInt(process.env.DB_PORT) || 3306,
-    multipleStatements: true
+    multipleStatements: true,
+    ssl: {
+        rejectUnauthorized: false
+    }
 };
 
 // Validate required environment variables
@@ -188,9 +191,32 @@ function startServer() {
         });
     });
 
-    // Root Route
     app.get('/', (req, res) => {
         res.send('MyEnglish Backend Server is Running. Please use the frontend application to interact.');
+    });
+
+    // Database Test Route (For Debugging)
+    app.get('/api/test-db', (req, res) => {
+        try {
+            pool.query('SELECT 1 + 1 AS solution', (err, results, fields) => {
+                if (err) {
+                    return res.status(500).json({
+                        status: 'Database Connection Failed',
+                        error: err.message,
+                        code: err.code,
+                        host: dbConfig.host,
+                        user: dbConfig.user
+                    });
+                }
+                res.json({
+                    status: 'Database Connection Successful',
+                    result: results[0].solution,
+                    timestamp: new Date().toISOString()
+                });
+            });
+        } catch (e) {
+            res.status(500).json({ status: 'Unexpected Error', error: e.message });
+        }
     });
 
     // Routes
