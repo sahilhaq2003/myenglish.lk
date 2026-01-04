@@ -93,6 +93,10 @@ function startServer() {
         queueLimit: 0
     });
 
+    /* 
+    // AUTO-MIGRATION DISABLED FOR SERVERLESS PERFORMANCE
+    // Run these migrations manually or in a separate script if needed.
+    
     // Create Users Table
     const createTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
@@ -102,7 +106,7 @@ function startServer() {
       password VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `;
+    `;
 
     pool.query(createTableQuery, (err) => {
         if (err) {
@@ -162,7 +166,7 @@ function startServer() {
       UNIQUE KEY unique_enrollment (user_email, course_id),
       FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
     )
-  `;
+    `;
 
     pool.query(createEnrollmentsTableQuery, (err) => {
         if (err) {
@@ -171,6 +175,7 @@ function startServer() {
             console.log('Enrollments table checked/created.');
         }
     });
+    */
 
     // =====================================================
     // LEARNING PLATFORM ROUTES
