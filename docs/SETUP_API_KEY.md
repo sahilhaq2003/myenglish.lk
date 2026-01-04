@@ -5,13 +5,13 @@
 Your API key has been configured. To create the `.env` file with your API key, run this command in PowerShell:
 
 ```powershell
-"VITE_API_KEY=AIzaSyC79eDBN5gVb_LSac-CUtPduRiZswdnNik" | Out-File -FilePath .env -Encoding utf8
+"VITE_API_KEY=YOUR_API_KEY_HERE" | Out-File -FilePath .env -Encoding utf8
 ```
 
 Or manually create a file named `.env` in the project root with this content:
 
 ```
-VITE_API_KEY=AIzaSyC79eDBN5gVb_LSac-CUtPduRiZswdnNik
+VITE_API_KEY=YOUR_API_KEY_HERE
 ```
 
 ## After Creating the .env File
@@ -26,7 +26,7 @@ VITE_API_KEY=AIzaSyC79eDBN5gVb_LSac-CUtPduRiZswdnNik
 
 - If you see "API key not configured" errors, make sure:
   - The `.env` file exists in the project root (same folder as `package.json`)
-  - The file contains `VITE_API_KEY=AIzaSyC79eDBN5gVb_LSac-CUtPduRiZswdnNik`
+  - The file contains `VITE_API_KEY=YOUR_API_KEY_HERE` (replace with your actual key)
   - You've restarted the dev server after creating the file
   - There are no extra spaces or quotes around the API key
 
