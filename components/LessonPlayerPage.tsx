@@ -49,6 +49,7 @@ export function LessonPlayerPage() {
     const nextStartTimeRef = useRef(0);
     const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
     const sessionRef = useRef<any>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
     const isAiSpeakingRef = useRef(false);
     const isClosingSessionRef = useRef(false);
@@ -118,6 +119,13 @@ export function LessonPlayerPage() {
             scriptProcessorRef.current.onaudioprocess = null;
             try { scriptProcessorRef.current.disconnect(); } catch (e) { }
             scriptProcessorRef.current = null;
+        }
+
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => {
+                try { track.stop(); } catch (e) { }
+            });
+            mediaStreamRef.current = null;
         }
 
         for (const source of sourcesRef.current) {
@@ -215,6 +223,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                                     channelCount: 1
                                 }
                             });
+                            mediaStreamRef.current = stream;
                             await initAudio();
                             const source = audioContextRef.current!.createMediaStreamSource(stream);
                             const processor = audioContextRef.current!.createScriptProcessor(1024, 1, 1);
