@@ -43,9 +43,16 @@ const dbConfig = {
 
 // Validate required environment variables
 if (!dbConfig.password) {
-    console.error('ERROR: DB_PASSWORD environment variable is not set!');
-    process.exit(1);
+    console.error('WARNING: DB_PASSWORD environment variable is not set! Database operations will fail.');
+    // process.exit(1); // Don't crash on Vercel, let it try to handle requests just in case
 }
+
+console.log('Environment Variables Loaded:', {
+    DB_HOST: process.env.DB_HOST ? 'Set' : 'Missing',
+    DB_USER: process.env.DB_USER ? 'Set' : 'Missing',
+    DB_PASSWORD: process.env.DB_PASSWORD ? 'Set' : 'Missing',
+    NODE_ENV: process.env.NODE_ENV
+});
 
 // Create a connection to create the database if it doesn't exist
 // Note: mysql2/promise is better for async/await but callback style works if wrapped or used directly.
