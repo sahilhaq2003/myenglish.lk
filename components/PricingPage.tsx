@@ -9,7 +9,7 @@ interface PricingPageProps {
 }
 
 export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
-    const [isAnnual, setIsAnnual] = useState(true);
+
 
     const plans = [
         {
@@ -27,7 +27,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
         },
         {
             name: 'Pro Learner',
-            price: isAnnual ? 2.5 : 5,
+            price: 5,
             description: 'Accelerate your fluency with unlimited practice.',
             features: [
                 'Unlimited AI conversations',
@@ -58,20 +58,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                             Choose the plan that fits your goals. Upgrade, downgrade, or cancel anytime.
                         </p>
 
-                        {/* Billing Toggle */}
-                        <div className="flex items-center justify-center gap-4 mb-8">
-                            <span className={`text-sm font-bold ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
-                            <button
-                                onClick={() => setIsAnnual(!isAnnual)}
-                                className="relative w-14 h-8 bg-primary/20 rounded-full transition-colors focus:outline-none"
-                            >
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-primary rounded-full transition-transform ${isAnnual ? 'translate-x-6' : ''}`} />
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>Yearly</span>
-                                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full">Save 20%</span>
-                            </div>
-                        </div>
+
                     </div>
 
                     {/* Pricing Cards */}
@@ -100,9 +87,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                                         <span className="text-4xl font-black text-foreground">${plan.price}</span>
                                         <span className="text-muted-foreground">/mo</span>
                                     </div>
-                                    {isAnnual && plan.price > 0 && (
-                                        <p className="text-xs text-muted-foreground mt-2">Billed ${Math.round(plan.price * 12)} yearly</p>
-                                    )}
+
                                 </div>
 
                                 <button

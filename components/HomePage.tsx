@@ -14,7 +14,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageProps) {
-    const [isAnnualPricing, setIsAnnualPricing] = useState(true);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLevel, setSelectedLevel] = useState<string>('All');
 
@@ -35,7 +35,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         },
         {
             name: 'Pro Learner',
-            price: isAnnualPricing ? 2.5 : 5,
+            price: 5,
             description: 'Accelerate your fluency with unlimited practice.',
             features: [
                 'Unlimited AI conversations',
@@ -496,20 +496,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 Flexible pricing for every learning goal. Start free, upgrade anytime.
                             </p>
 
-                            {/* Billing Toggle */}
-                            <div className="flex items-center justify-center gap-4 mb-8">
-                                <span className={`text-sm font-bold ${!isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
-                                <button
-                                    onClick={() => setIsAnnualPricing(!isAnnualPricing)}
-                                    className="relative w-14 h-8 bg-primary/20 rounded-full transition-colors focus:outline-none"
-                                >
-                                    <div className={`absolute top-1 left-1 w-6 h-6 bg-primary rounded-full transition-transform ${isAnnualPricing ? 'translate-x-6' : ''}`} />
-                                </button>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-bold ${isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Yearly</span>
-                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full">Save 20%</span>
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* Pricing Cards */}
@@ -538,9 +525,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                             <span className="text-4xl font-black text-foreground">${plan.price}</span>
                                             <span className="text-muted-foreground">/mo</span>
                                         </div>
-                                        {isAnnualPricing && plan.price > 0 && (
-                                            <p className="text-xs text-muted-foreground mt-2">Billed ${Math.round(plan.price * 12)} yearly</p>
-                                        )}
+
                                     </div>
 
                                     <button
