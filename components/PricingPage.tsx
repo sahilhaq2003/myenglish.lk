@@ -37,7 +37,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                 'Certificate of completion',
                 'Ad-free experience'
             ],
-            cta: 'Start 7-Day Free Trial',
+            cta: 'Start 1-Day Free Trial',
             popular: true
         },
 

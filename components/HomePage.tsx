@@ -45,7 +45,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                 'Certificate of completion',
                 'Ad-free experience'
             ],
-            cta: 'Start 7-Day Free Trial',
+            cta: 'Start 1-Day Free Trial',
             popular: true
         },
 
@@ -569,7 +569,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                             <ArrowRight size={24} />
                         </button>
                         <p className="mt-6 text-sm opacity-75">
-                            No credit card required • 7-day free trial • Cancel anytime
+                            No credit card required • 1-day free trial • Cancel anytime
                         </p>
                     </div>
                 </section>
