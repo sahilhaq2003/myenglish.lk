@@ -27,7 +27,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
         },
         {
             name: 'Pro Learner',
-            price: isAnnual ? 9.99 : 14.99,
+            price: isAnnual ? 2.5 : 5,
             description: 'Accelerate your fluency with unlimited practice.',
             features: [
                 'Unlimited AI conversations',
@@ -40,21 +40,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
             cta: 'Start 7-Day Free Trial',
             popular: true
         },
-        {
-            name: 'Business',
-            price: isAnnual ? 29.99 : 39.99,
-            description: 'For professionals and teams needing advanced skills.',
-            features: [
-                'Everything in Pro',
-                'Business English modules',
-                'Interview preparation',
-                'Presentation coaching',
-                'Team progress analytics',
-                'Priority support'
-            ],
-            cta: 'Contact Sales',
-            popular: false
-        }
+
     ];
 
     return (
@@ -89,13 +75,13 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                     </div>
 
                     {/* Pricing Cards */}
-                    <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         {plans.map((plan) => (
                             <div
                                 key={plan.name}
                                 className={`relative bg-card rounded-[2rem] p-8 border-2 transition-all hover:-translate-y-2 ${plan.popular
-                                        ? 'border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
-                                        : 'border-border hover:border-primary/50'
+                                    ? 'border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
+                                    : 'border-border hover:border-primary/50'
                                     }`}
                             >
                                 {plan.popular && (
@@ -122,8 +108,8 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                                 <button
                                     onClick={onGetStarted}
                                     className={`w-full py-4 rounded-xl font-bold mb-8 transition-all ${plan.popular
-                                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
-                                            : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
+                                        : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                                         }`}
                                 >
                                     {plan.cta}

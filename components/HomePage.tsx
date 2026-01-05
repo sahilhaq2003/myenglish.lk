@@ -35,7 +35,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         },
         {
             name: 'Pro Learner',
-            price: isAnnualPricing ? 9.99 : 14.99,
+            price: isAnnualPricing ? 2.5 : 5,
             description: 'Accelerate your fluency with unlimited practice.',
             features: [
                 'Unlimited AI conversations',
@@ -48,21 +48,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
             cta: 'Start 7-Day Free Trial',
             popular: true
         },
-        {
-            name: 'Business',
-            price: isAnnualPricing ? 29.99 : 39.99,
-            description: 'For professionals and teams needing advanced skills.',
-            features: [
-                'Everything in Pro',
-                'Business English modules',
-                'Interview preparation',
-                'Presentation coaching',
-                'Team progress analytics',
-                'Priority support'
-            ],
-            cta: 'Contact Sales',
-            popular: false
-        }
+
     ];
 
     // Featured courses
@@ -527,7 +513,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                         </div>
 
                         {/* Pricing Cards */}
-                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                             {pricingPlans.map((plan) => (
                                 <div
                                     key={plan.name}
