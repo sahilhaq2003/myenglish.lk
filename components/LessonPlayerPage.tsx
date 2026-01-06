@@ -19,7 +19,8 @@ const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview',
     'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview',
     'l_efb_02_01': 'https://drive.google.com/file/d/1bdCQTzes4OZ-ngoLpQLbJYnFxS9Q9CR_/preview',
-    'l_efb_02_02': 'https://drive.google.com/file/d/1eTJJM2mFacK0aczwaeCHoGp6NhMZaXxD/preview'
+    'l_efb_02_02': 'https://drive.google.com/file/d/1eTJJM2mFacK0aczwaeCHoGp6NhMZaXxD/preview',
+    'l_efb_02_03': 'https://drive.google.com/file/d/1QrArRdu6hwVumAP2617eJeXnSakZtGKh/preview'
 };
 
 interface Lesson {
@@ -257,6 +258,14 @@ SLIDE 3: He and She sentences - "He runs", "She sleeps". (Note the 's').
 SLIDE 4: We and They sentences - "We walk home", "They play football".
 SLIDE 5: Sentence Builder - Practice constructing new sentences together.
 SLIDE 6: Lesson Summary - Recap of pronouns and basic verbs.
+`,
+            'l_efb_02_03': `
+SLIDE 1: Title Slide - "Yes / No Questions". Introduction to asking questions.
+SLIDE 2: "Do you...?" Questions - Do you like coffee? Do you play football?
+SLIDE 3: Short Answers - Yes, I do. / No, I do not.
+SLIDE 4: "Are you...?" Questions - Are you happy? Are you tired?
+SLIDE 5: "Is he/she...?" Questions - Is he a teacher? Is she sleeping?
+SLIDE 6: Practice & Review - Rapid fire Q&A practice.
 `
         };
 
