@@ -8,7 +8,23 @@ interface AiAvatarProps {
 
 export function AiAvatar({ analyser, isAiSpeaking }: AiAvatarProps) {
     const [volume, setVolume] = useState(0);
+    const [isBlinking, setIsBlinking] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Blinking logic
+    useEffect(() => {
+        const blinkLoop = () => {
+            setIsBlinking(true);
+            setTimeout(() => setIsBlinking(false), 200); // Blink duration
+
+            // Random interval between 3s and 6s
+            const nextBlink = Math.random() * 3000 + 3000;
+            setTimeout(blinkLoop, nextBlink);
+        };
+
+        const initialTimeout = setTimeout(blinkLoop, 3000);
+        return () => clearTimeout(initialTimeout);
+    }, []);
 
     useEffect(() => {
         if (!analyser || !isAiSpeaking) {
@@ -64,6 +80,14 @@ export function AiAvatar({ analyser, isAiSpeaking }: AiAvatarProps) {
                 alt="AI Teacher Speaking"
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-75"
                 style={{ opacity: isAiSpeaking ? Math.min(1, volume * 1.5 + 0.1) : 0 }}
+            />
+
+            {/* Blinking Image - Overlays everything when blinking */}
+            <img
+                src="/ai-teacher-blinking.png"
+                alt="AI Teacher Blinking"
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-75"
+                style={{ opacity: isBlinking ? 1 : 0 }}
             />
 
             {/* Optional: Simple glow effect based on volume */}
