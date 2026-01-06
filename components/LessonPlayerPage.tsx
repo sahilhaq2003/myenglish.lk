@@ -640,7 +640,11 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                                     } catch (e) { console.error(e); }
                                                 }
                                                 stopAudio();
-                                                navigate('/dashboard'); // Go back to dashboard after completing
+                                                if ((lesson as any).course_id) {
+                                                    navigate(`/learning/course/${(lesson as any).course_id}`);
+                                                } else {
+                                                    navigate('/dashboard');
+                                                }
                                             }}
                                             className={`px-6 py-3 sm:px-6 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto ${isCompletionEnabled
                                                 ? 'bg-green-500 hover:bg-green-600 text-white hover:scale-105 animate-pulse'
