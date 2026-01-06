@@ -15,7 +15,7 @@ const MODEL_NAME = 'models/gemini-2.0-flash-exp';
 const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview',
     'l_efb_01_02': 'https://drive.google.com/file/d/1veHAywJjL9-yEM1he3oC_AiZIUujdv9q/preview',
-    'l_efb_01_04': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview'
+    'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview'
 };
 
 interface Lesson {
@@ -207,8 +207,8 @@ SLIDE 3: Letters I to Q - Pronunciation and examples (Ice cream, Jug...).
 SLIDE 4: Letters R to Z - Pronunciation and examples (Rat, Sun, Zebra...).
 SLIDE 5: Summary - Vowels (A,E,I,O,U) vs Consonants Introduction.
 `,
-            'l_efb_01_04': `
-SLIDE 1: Title Slide - "Basic Pronunciation". Welcome & Introduction to Sounds.
+            'l_efb_01_03': `
+SLIDE 1: Title Slide - "Vowels and Consonants". Welcome & Introduction to Sounds.
 SLIDE 2: Vowels vs. Consonants - A, E, I, O, U vs the rest.
 SLIDE 3: Short Vowel Sounds - Cat, Bed, Pig, Hot, Bus. Practice together.
 SLIDE 4: Long Vowel Sounds - Cake, Feet, Bike, Bone, Cube. Practice together.
