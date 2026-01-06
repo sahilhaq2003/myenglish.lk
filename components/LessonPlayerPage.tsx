@@ -17,7 +17,8 @@ const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_02': 'https://drive.google.com/file/d/1veHAywJjL9-yEM1he3oC_AiZIUujdv9q/preview',
     'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview',
     'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview',
-    'l_efb_02_01': 'https://drive.google.com/file/d/1bdCQTzes4OZ-ngoLpQLbJYnFxS9Q9CR_/preview'
+    'l_efb_02_01': 'https://drive.google.com/file/d/1bdCQTzes4OZ-ngoLpQLbJYnFxS9Q9CR_/preview',
+    'l_efb_02_02': 'https://drive.google.com/file/d/1eTJJM2mFacK0aczwaeCHoGp6NhMZaXxD/preview'
 };
 
 interface Lesson {
@@ -231,6 +232,14 @@ SLIDE 2: Core Actions (Verbs) - Go, Come, Eat, Sleep. Definitions & Examples.
 SLIDE 3: More Actions - Drink, Walk, Run. Usage in daily life.
 SLIDE 4: Putting it in Sentences - "I walk home", "I drink water".
 SLIDE 5: Summary & Review - Quick recap of all 7 new words.
+`,
+            'l_efb_02_02': `
+SLIDE 1: Title Slide - "Simple Sentences". The S-V-O Structure.
+SLIDE 2: I and You sentences - "I eat apple", "You drink water".
+SLIDE 3: He and She sentences - "He runs", "She sleeps". (Note the 's').
+SLIDE 4: We and They sentences - "We walk home", "They play football".
+SLIDE 5: Sentence Builder - Practice constructing new sentences together.
+SLIDE 6: Lesson Summary - Recap of pronouns and basic verbs.
 `
         };
 
