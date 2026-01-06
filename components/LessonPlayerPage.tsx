@@ -561,7 +561,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                             {outputTranscription ? (
                                                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-                                                    <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
+                                                    <p className="text-base sm:text-lg md:text-xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
                                                         {outputTranscription}
                                                         {isAiSpeakingRef.current && (
                                                             <span className="inline-block ml-2 w-2 h-4 bg-indigo-500 animate-pulse align-middle" />
