@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { AiAvatar } from './AiAvatar';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { decode, decodeAudioData, createBlob } from '../utils/audio';
 
@@ -61,6 +62,7 @@ export function LessonPlayerPage() {
     const sessionRef = useRef<any>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
     const isAiSpeakingRef = useRef(false);
     const isClosingSessionRef = useRef(false);
     const transcriptionContainerRef = useRef<HTMLDivElement>(null);
@@ -119,6 +121,13 @@ export function LessonPlayerPage() {
             }
             if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
             if (outAudioContextRef.current?.state === 'suspended') await outAudioContextRef.current.resume();
+
+            // Initialize analyser if needed
+            if (!analyserRef.current && outAudioContextRef.current) {
+                analyserRef.current = outAudioContextRef.current.createAnalyser();
+                analyserRef.current.fftSize = 512;
+                analyserRef.current.smoothingTimeConstant = 0.4;
+            }
         } catch (e) {
             console.error("Audio initialization failed:", e);
         }
@@ -167,7 +176,15 @@ export function LessonPlayerPage() {
             const buffer = await decodeAudioData(decode(audioData), outCtx, 24000, 1);
             const source = outCtx.createBufferSource();
             source.buffer = buffer;
-            source.connect(outCtx.destination);
+
+            // Connect through analyser for lip sync
+            if (analyserRef.current) {
+                source.connect(analyserRef.current);
+                analyserRef.current.connect(outCtx.destination);
+            } else {
+                source.connect(outCtx.destination);
+            }
+
             source.start(nextStartTimeRef.current);
             nextStartTimeRef.current += buffer.duration;
             sourcesRef.current.add(source);
@@ -596,9 +613,10 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                                 </div>
                                             ) : (
                                                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
-                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
-                                                        <Volume2 size={24} className="sm:w-8 sm:h-8 text-indigo-500" />
-                                                    </div>
+                                                    <AiAvatar
+                                                        analyser={analyserRef.current}
+                                                        isAiSpeaking={isAiSpeakingRef.current}
+                                                    />
                                                     <div>
                                                         <p className="text-base sm:text-lg text-foreground font-bold">
                                                             {isAiSpeakingRef.current ? "Teacher is speaking..." : "Waiting for teacher..."}
