@@ -16,7 +16,8 @@ const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview',
     'l_efb_01_02': 'https://drive.google.com/file/d/1veHAywJjL9-yEM1he3oC_AiZIUujdv9q/preview',
     'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview',
-    'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview'
+    'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview',
+    'l_efb_02_01': 'https://drive.google.com/file/d/1bdCQTzes4OZ-ngoLpQLbJYnFxS9Q9CR_/preview'
 };
 
 interface Lesson {
@@ -223,6 +224,13 @@ SLIDE 3: The 'OG' Family - Dog, Log, Fog, Frog. Emphasize the 'o' sound.
 SLIDE 4: Common Everyday Objects - Cup, Pen, Box, Bus. Clear enunciation.
 SLIDE 5: Simple Actions - Run, Sit, Eat. Action words pronunciation.
 SLIDE 6: Review & Practice - Rapid fire word practice.
+`,
+            'l_efb_02_01': `
+SLIDE 1: Title Slide - "Common English Words". Introduction to key vocabulary.
+SLIDE 2: Core Actions (Verbs) - Go, Come, Eat, Sleep. Definitions & Examples.
+SLIDE 3: More Actions - Drink, Walk, Run. Usage in daily life.
+SLIDE 4: Putting it in Sentences - "I walk home", "I drink water".
+SLIDE 5: Summary & Review - Quick recap of all 7 new words.
 `
         };
 
