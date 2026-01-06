@@ -222,11 +222,15 @@ INSTRUCTIONS:
 ${presentationUrl ? `7. PRESENTATION MODE (CRITICAL - EXECUTE THIS ORDER): 
    - START with the first topic immediately.
    - TEACH NATURALLY: Do NOT announce "Slide 1", "Page 2", or "Next slide". Just teach the topic.
+   - PACING & DEPTH: You MUST fill approximately ${lesson.estimated_minutes} minutes. DO NOT RUSH.
+     - Expand on each slide point with detailed explanations, real-world examples, and stories.
+     - Spend roughly ${(lesson.estimated_minutes / 5).toFixed(0)} minutes per slide topic.
+   - TEACHING STYLE: Act like a real professor. Define new words clearly. Repeat critical concepts for retention. Use an encouraging, energetic tone.
    - TRANSITIONS: When finishing a topic, move naturally to the next one (e.g., "Moving on...", "Now let's look at...", "Another important aspect is...") corresponding to the structure above.
    - Assume the user is following along visually.
    - STRICTLY follower the topic order in "SPECIFIC SLIDE STRUCTURE" from top to bottom.` : ''}
 
-IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Next slide".`;
+IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Next slide". Fill the time. BE A GREAT TEACHER.`;
 
         try {
             const sessionPromise = ai.live.connect({
