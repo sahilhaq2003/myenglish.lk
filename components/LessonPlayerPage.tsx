@@ -596,6 +596,14 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                         </div>
                                     )}
 
+                                    {/* AI Avatar - Always Visible */}
+                                    <div className="flex justify-center shrink-0">
+                                        <AiAvatar
+                                            analyser={analyserRef.current}
+                                            isAiSpeaking={isAiSpeakingRef.current}
+                                        />
+                                    </div>
+
                                     {/* Dedicated Transcription Box */}
                                     <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md">
                                         <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
@@ -613,10 +621,9 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                                 </div>
                                             ) : (
                                                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
-                                                    <AiAvatar
-                                                        analyser={analyserRef.current}
-                                                        isAiSpeaking={isAiSpeakingRef.current}
-                                                    />
+                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
+                                                        <Volume2 size={24} className="sm:w-8 sm:h-8 text-indigo-500" />
+                                                    </div>
                                                     <div>
                                                         <p className="text-base sm:text-lg text-foreground font-bold">
                                                             {isAiSpeakingRef.current ? "Teacher is speaking..." : "Waiting for teacher..."}
