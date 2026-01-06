@@ -220,13 +220,13 @@ INSTRUCTIONS:
 5. If the user asks a question, answer it, then IMMEDIATELY return to the lesson content.
 6. Target a 20-minute comprehensive lesson flow.
 ${presentationUrl ? `7. PRESENTATION MODE (CRITICAL - EXECUTE THIS ORDER): 
-   - START with SLIDE 1. Say "Let's start with the first slide..."
-   - Teach the content for that slide.
-   - THEN explicitly say "Please move to the next slide" or "Let's look at smooth slide [number]..." before starting the next topic.
-   - WAIT 2-3 seconds of silence after asking to move slides (simulated by a pause in speech).
+   - START with the first topic (SLIDE 1).
+   - Teach the content for the current slide.
+   - When finishing a slide, transition naturally to the next topic (e.g., "Now, let's discuss...") WITHOUT asking the user to "move to the next slide".
+   - Assume the user is following along visually.
    - FOLLOW THE "SPECIFIC SLIDE STRUCTURE" provided above strictly from 1 to Last.` : ''}
 
-IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't skip slides. Use "Next slide" cues clearly.`;
+IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't skip slides.`;
 
         try {
             const sessionPromise = ai.live.connect({
