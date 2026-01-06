@@ -79,9 +79,11 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                     onClick={() => navigate('/')}
                     className="flex items-center gap-2 cursor-pointer group"
                 >
-                    <div className="p-2 bg-gradient-to-tr from-primary to-secondary rounded-xl text-white shadow-lg group-hover:scale-105 transition-transform">
-                        <GraduationCap size={24} />
-                    </div>
+                    <img
+                        src="/logo.png"
+                        alt="MyEnglish.lk Logo"
+                        className="w-10 h-10 rounded-xl shadow-lg group-hover:scale-105 transition-transform"
+                    />
                     <span className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">
                         MyEnglish.lk
                     </span>
