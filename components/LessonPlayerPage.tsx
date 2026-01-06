@@ -189,27 +189,44 @@ export function LessonPlayerPage() {
 
         const ai = new GoogleGenAI({ apiKey });
 
+
+        const SLIDE_PLANS: Record<string, string> = {
+            'l_efb_01_01': `
+SLIDE 1: Title Slide - "What is English?" (Introduction). Welcome the student.
+SLIDE 2: "Global Language" - Mention 1.5 Billion speakers. Map visual.
+SLIDE 3: "Why Learn English?" - Travel, Business, Entertainment.
+SLIDE 4: "The Basics" - Brief mention of Alphabet/Vowels (Preview).
+SLIDE 5: "Summary & Next Steps" - Encouragement.
+`
+        };
+
+        const slidePlan = lesson ? SLIDE_PLANS[lesson.id] : null;
+
         const systemInstruction = `You are a friendly, expert English teacher.
         
 CURRENT LESSON: "${lesson.title}"
 OBJECTIVE: ${lesson.description}
 CONTENT: ${lesson.content_text}
 
+${slidePlan ? `SPECIFIC SLIDE STRUCTURE (FOLLOW THIS ORDER EXACTLY):
+${slidePlan}
+` : ''}
+
 INSTRUCTIONS:
-1. STRICT ADHERENCE: Teach ONLY the content provided in the "CONTENT" section above. Do not teach unrelated topics.
+1. STRICT ADHERENCE: Teach ONLY the content provided in the "CONTENT" section above${slidePlan ? " and the KEY SLIDE POINTS from the structure above" : ""}.
 2. When the user says "Start", begin the lesson immediately.
 3. TEACH CONTINUOUSLY: Explain concepts, give examples (based on the content), and guide the student.
 4. Speak naturally, with pauses and clear pronunciation.
 5. If the user asks a question, answer it, then IMMEDIATELY return to the lesson content.
 6. Target a 20-minute comprehensive lesson flow.
-${presentationUrl ? `7. PRESENTATION MODE (CRITICAL): 
-   - The user is viewing a slide deck for this lesson. 
-   - YOU MUST STRUCTURE YOUR TEACHING SLIDE-BY-SLIDE. 
-   - Explicitly guide the user: "Let's look at the first slide...", "Now, please scroll to the next slide...", "On this slide, you can see...".
-   - Give the user a moment to scroll when you ask them to move to the next slide.
-   - Ensure the flow is logical and matches the likely visual progression of the topic.` : ''}
+${presentationUrl ? `7. PRESENTATION MODE (CRITICAL - EXECUTE THIS ORDER): 
+   - START with SLIDE 1. Say "Let's start with the first slide..."
+   - Teach the content for that slide.
+   - THEN explicitly say "Please move to the next slide" or "Let's look at smooth slide [number]..." before starting the next topic.
+   - WAIT 2-3 seconds of silence after asking to move slides (simulated by a pause in speech).
+   - FOLLOW THE "SPECIFIC SLIDE STRUCTURE" provided above strictly from 1 to Last.` : ''}
 
-IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real lecture/class. Your goal is to help the user master THIS SPECIFIC LESSON.`;
+IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't skip slides. Use "Next slide" cues clearly.`;
 
         try {
             const sessionPromise = ai.live.connect({
@@ -426,7 +443,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
 
                     {/* Presentation Side (Left) */}
                     {presentationUrl && (
-                        <div className="w-full h-[500px] lg:h-[calc(100vh-280px)] min-h-[500px] bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative animate-in slide-in-from-left-4 duration-700">
+                        <div className="w-full aspect-video bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative animate-in slide-in-from-left-4 duration-700">
                             <div className="absolute top-0 left-0 right-0 p-4 bg-muted/30 backdrop-blur-md border-b border-border z-10 flex items-center gap-2">
                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4v16" /><rect x="10" y="4" width="10" height="16" rx="2" /></svg>
