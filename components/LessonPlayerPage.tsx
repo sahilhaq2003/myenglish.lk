@@ -13,7 +13,8 @@ const MODEL_NAME = 'models/gemini-2.0-flash-exp';
 
 // Mapping of Lesson IDs to Presentation URLs (Google Drive Preview Links)
 const PRESENTATION_URLS: Record<string, string> = {
-    'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview'
+    'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview',
+    'l_efb_01_02': 'https://drive.google.com/file/d/1veHAywJjL9-yEM1he3oC_AiZIUujdv9q/preview'
 };
 
 interface Lesson {
@@ -197,6 +198,13 @@ SLIDE 2: "Global Language" - Mention 1.5 Billion speakers. Map visual.
 SLIDE 3: "Why Learn English?" - Travel, Business, Entertainment.
 SLIDE 4: "The Basics" - Brief mention of Alphabet/Vowels (Preview).
 SLIDE 5: "Summary & Next Steps" - Encouragement.
+`,
+            'l_efb_01_02': `
+SLIDE 1: Title & Introduction - "The English Alphabet". 26 Letters overview.
+SLIDE 2: Letters A to H - Pronunciation and examples (Apple, Ball...).
+SLIDE 3: Letters I to Q - Pronunciation and examples (Ice cream, Jug...).
+SLIDE 4: Letters R to Z - Pronunciation and examples (Rat, Sun, Zebra...).
+SLIDE 5: Summary - Vowels (A,E,I,O,U) vs Consonants Introduction.
 `
         };
 
