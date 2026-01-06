@@ -15,7 +15,8 @@ const MODEL_NAME = 'models/gemini-2.0-flash-exp';
 const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview',
     'l_efb_01_02': 'https://drive.google.com/file/d/1veHAywJjL9-yEM1he3oC_AiZIUujdv9q/preview',
-    'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview'
+    'l_efb_01_03': 'https://drive.google.com/file/d/1MzhQpd5h8cB-lTMeYrSisVEK4uI0DmXi/preview',
+    'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview'
 };
 
 interface Lesson {
@@ -214,6 +215,14 @@ SLIDE 3: Short Vowel Sounds - Cat, Bed, Pig, Hot, Bus. Practice together.
 SLIDE 4: Long Vowel Sounds - Cake, Feet, Bike, Bone, Cube. Practice together.
 SLIDE 5: Common Consonant Blends - CH (Chair), SH (Ship), TH (This/Think).
 SLIDE 6: Practice & Summary - Putting it all together. Final words.
+`,
+            'l_efb_01_04': `
+SLIDE 1: Title Slide - "Basic Pronunciation". Welcome.
+SLIDE 2: The 'AT' Family - Cat, Bat, Sat, Hat. Emphasize the 'a' sound.
+SLIDE 3: The 'OG' Family - Dog, Log, Fog, Frog. Emphasize the 'o' sound.
+SLIDE 4: Common Everyday Objects - Cup, Pen, Box, Bus. Clear enunciation.
+SLIDE 5: Simple Actions - Run, Sit, Eat. Action words pronunciation.
+SLIDE 6: Review & Practice - Rapid fire word practice.
 `
         };
 
