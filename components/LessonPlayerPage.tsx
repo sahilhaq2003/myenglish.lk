@@ -202,7 +202,12 @@ INSTRUCTIONS:
 4. Speak naturally, with pauses and clear pronunciation.
 5. If the user asks a question, answer it, then IMMEDIATELY return to the lesson content.
 6. Target a 20-minute comprehensive lesson flow.
-${presentationUrl ? '7. PRESENTATION MODE: The user is viewing slides for this lesson. Reference "the slides" or "the presentation" occasionally to keep them engaged with the visual material.' : ''}
+${presentationUrl ? `7. PRESENTATION MODE (CRITICAL): 
+   - The user is viewing a slide deck for this lesson. 
+   - YOU MUST STRUCTURE YOUR TEACHING SLIDE-BY-SLIDE. 
+   - Explicitly guide the user: "Let's look at the first slide...", "Now, please scroll to the next slide...", "On this slide, you can see...".
+   - Give the user a moment to scroll when you ask them to move to the next slide.
+   - Ensure the flow is logical and matches the likely visual progression of the topic.` : ''}
 
 IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real lecture/class. Your goal is to help the user master THIS SPECIFIC LESSON.`;
 
