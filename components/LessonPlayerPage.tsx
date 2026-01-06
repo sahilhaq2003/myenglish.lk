@@ -543,10 +543,13 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                                 <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto h-full flex flex-col">
                                     {!hasStarted && (
                                         <div className="flex justify-center mb-4 sm:mb-8">
-                                            <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform text-sm sm:text-base">
+                                            <button
+                                                onClick={startLessonContent}
+                                                className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform text-sm sm:text-base cursor-pointer hover:shadow-xl active:scale-95"
+                                            >
                                                 <Mic size={18} className="sm:w-5 sm:h-5" />
-                                                Please say "START" to begin
-                                            </div>
+                                                Say "START" or Click to Begin
+                                            </button>
                                         </div>
                                     )}
 
