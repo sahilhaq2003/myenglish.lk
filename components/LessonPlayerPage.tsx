@@ -377,27 +377,35 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                     },
                     onmessage: async (msg: LiveServerMessage) => {
                         setDebugStatus("Receiving...");
-                        if (msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
-                            isAiSpeakingRef.current = true;
-                            const audioBase64 = msg.serverContent.modelTurn.parts[0].inlineData.data;
-                            await playAudio(audioBase64);
+
+                        // Handle Model Turn (Audio and Text)
+                        const parts = msg.serverContent?.modelTurn?.parts;
+                        if (parts) {
+                            for (const part of parts) {
+                                if (part.text) {
+                                    setOutputTranscription(prev => (prev + part.text).slice(-10000));
+                                }
+                                if (part.inlineData?.data) {
+                                    isAiSpeakingRef.current = true;
+                                    await playAudio(part.inlineData.data); // Audio playback
+                                }
+                            }
                         }
 
-                        if (msg.serverContent?.outputTranscription) {
-                            const text = msg.serverContent.outputTranscription.text;
-                            // console.log("Transcription:", text);
-                            setOutputTranscription(prev => (prev + text).slice(-10000));
+                        // Handle explicit input/output transcription fields if present (fallback/alternative)
+                        if (msg.serverContent?.outputTranscription?.text) {
+                            // Avoid duplication if possible, but for now ensure we get *something*
+                            // Usually modelTurn text handles the response.
+                            // We'll leave this commented out or removed to rely on modelTurn, 
+                            // OR we can check if modelTurn yielded nothing.
                         }
+
                         if (msg.serverContent?.inputTranscription) {
                             const incoming = msg.serverContent!.inputTranscription!.text;
                             setInputTranscription(prev => (prev + " " + incoming).slice(-2000));
                         }
 
                         if (msg.serverContent?.interrupted) {
-                            // isAiSpeakingRef.current = false;
-                            // for (const source of sourcesRef.current) try { source.stop(); } catch (e) { }
-                            // sourcesRef.current.clear();
-                            // nextStartTimeRef.current = 0;
                             console.log("Interruption ignored in LessonPlayerPage");
                         }
 
