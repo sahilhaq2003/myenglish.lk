@@ -289,7 +289,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going. Don't say "Ne
                             if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
 
                             const durationSeconds = (lesson?.estimated_minutes || 2) * 60;
-                            const thresholdSeconds = durationSeconds * 0.5;
+                            const thresholdSeconds = durationSeconds * 0.1;
                             let secondsElapsed = 0;
 
                             sessionTimerRef.current = setInterval(() => {
