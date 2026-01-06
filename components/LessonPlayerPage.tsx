@@ -11,6 +11,11 @@ import { decode, decodeAudioData, createBlob } from '../utils/audio';
 
 const MODEL_NAME = 'models/gemini-2.0-flash-exp';
 
+// Mapping of Lesson IDs to Presentation URLs (Google Drive Preview Links)
+const PRESENTATION_URLS: Record<string, string> = {
+    'l_efb_01_01': 'https://drive.google.com/file/d/1paR8iUgPD9Upwu4rSqf-Q22grwBY3nmk/preview'
+};
+
 interface Lesson {
     id: string;
     title: string;
@@ -57,6 +62,9 @@ export function LessonPlayerPage() {
 
     const userEmail = localStorage.getItem('myenglish_userEmail');
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Check if current lesson has a presentation
+    const presentationUrl = lessonId ? PRESENTATION_URLS[lessonId] : undefined;
 
     // Initial cleanup effect
     useEffect(() => {
@@ -194,6 +202,7 @@ INSTRUCTIONS:
 4. Speak naturally, with pauses and clear pronunciation.
 5. If the user asks a question, answer it, then IMMEDIATELY return to the lesson content.
 6. Target a 20-minute comprehensive lesson flow.
+${presentationUrl ? '7. PRESENTATION MODE: The user is viewing slides for this lesson. Reference "the slides" or "the presentation" occasionally to keep them engaged with the visual material.' : ''}
 
 IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real lecture/class. Your goal is to help the user master THIS SPECIFIC LESSON.`;
 
@@ -373,7 +382,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                 onExploreCourses={() => navigate('/courses')}
             />
 
-            <main className="flex-1 pt-20 sm:pt-24 pb-4 sm:pb-8 px-4 sm:px-8 max-w-7xl mx-auto w-full flex flex-col items-center">
+            <main className="flex-1 pt-20 sm:pt-24 pb-4 sm:pb-8 px-4 sm:px-8 w-full flex flex-col items-center">
                 {/* Header Section */}
                 <div className="w-full text-center mb-6 sm:mb-8 relative z-10 animate-in fade-in slide-in-from-top-4 duration-700">
                     <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-indigo-50/50 dark:bg-indigo-500/10 backdrop-blur-md border border-indigo-100 dark:border-indigo-500/20 rounded-full text-[10px] sm:text-xs font-bold mb-4 sm:mb-6 text-indigo-600 dark:text-indigo-400 uppercase tracking-widest shadow-sm">
@@ -389,7 +398,7 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                 </div>
 
                 {/* Navigation Back */}
-                <div className="w-full max-w-4xl mb-6 sm:mb-8 flex justify-start z-20 relative">
+                <div className="w-full max-w-7xl mb-6 sm:mb-8 flex justify-start z-20 relative">
                     <button
                         onClick={() => {
                             if ((lesson as any).course_id) {
@@ -407,214 +416,230 @@ IMPORTANT: Do not stop teaching unless asked. Keep the flow going like a real le
                     </button>
                 </div>
 
-                {/* Voice Interaction Area */}
-                <div className="w-full max-w-4xl flex-1 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 overflow-hidden flex flex-col relative min-h-[500px] h-[calc(100vh-280px)] sm:h-[650px] ring-1 ring-slate-900/5">
-                    {/* Visualizer Header */}
-                    <div className="p-4 sm:p-6 border-b border-border bg-muted/30 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-col gap-3 sm:gap-4">
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]' : 'bg-gray-400'}`} />
-                                <span className="font-bold text-xs sm:text-sm tracking-wide">
-                                    {isLive ? (hasStarted ? "AI TEACHING LIVE" : "LISTENING FOR 'START'") : "VIRTUAL CLASSROOM"}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 sm:gap-4">
-                                <div className="hidden sm:flex items-center gap-2 text-xs font-bold font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
-                                    <Clock size={12} className="opacity-70" />
-                                    <span>
-                                        {Math.floor(timeSpent / 60).toString().padStart(2, '0')}:
-                                        {(timeSpent % 60).toString().padStart(2, '0')}
-                                    </span>
-                                </div>
-                                <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-center gap-1.5 sm:gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                                    {Math.round(progressPercentage)}% Complete
-                                </div>
-                            </div>
-                        </div>
+                {/* Content Container - Handles Split View */}
+                <div className={`w-full max-w-7xl grid gap-6 ${presentationUrl ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 justify-items-center'}`}>
 
-                        {/* Progress Bar */}
-                        <div className="w-full h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear"
-                                style={{ width: `${progressPercentage}%` }}
+                    {/* Presentation Side (Left) */}
+                    {presentationUrl && (
+                        <div className="w-full h-[500px] lg:h-[calc(100vh-280px)] min-h-[500px] bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden relative animate-in slide-in-from-left-4 duration-700">
+                            <div className="absolute top-0 left-0 right-0 p-4 bg-muted/30 backdrop-blur-md border-b border-border z-10 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4v16" /><rect x="10" y="4" width="10" height="16" rx="2" /></svg>
+                                </span>
+                                <span className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Presentation Slides</span>
+                            </div>
+                            <iframe
+                                src={presentationUrl}
+                                className="w-full h-full pt-14"
+                                allow="autoplay"
+                                title="Lesson Presentation"
                             />
                         </div>
-                    </div>
+                    )}
 
-                    {/* Transcription / Content Area */}
-                    <div
-                        ref={transcriptionContainerRef}
-                        className="flex-1 overflow-y-auto p-4 sm:p-8 pt-24 sm:pt-28 pb-28 sm:pb-32 space-y-4 sm:space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm"
-                    >
-                        {!isLive ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 animate-in fade-in zoom-in duration-500 px-4">
-                                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-2">
-                                    <Sparkles size={40} className="sm:w-12 sm:h-12 text-indigo-600 dark:text-indigo-400" />
+                    {/* Voice Interaction Area (Right or Center) */}
+                    <div className={`w-full ${!presentationUrl ? 'max-w-4xl' : ''} bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 overflow-hidden flex flex-col relative min-h-[500px] h-[calc(100vh-280px)] sm:h-[650px] ring-1 ring-slate-900/5 animate-in slide-in-from-bottom-8 duration-700 delay-100`}>
+                        {/* Visualizer Header */}
+                        <div className="p-4 sm:p-6 border-b border-border bg-muted/30 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-col gap-3 sm:gap-4">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]' : 'bg-gray-400'}`} />
+                                    <span className="font-bold text-xs sm:text-sm tracking-wide">
+                                        {isLive ? (hasStarted ? "AI TEACHING LIVE" : "LISTENING FOR 'START'") : "VIRTUAL CLASSROOM"}
+                                    </span>
                                 </div>
-                                <div>
-                                    <h3 className="text-xl sm:text-2xl font-bold mb-2">Ready to Learn?</h3>
-                                    <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-                                        Join the live voice class. The AI teacher will guide you through the entire lesson interactively.
-                                    </p>
+                                <div className="flex items-center gap-2 sm:gap-4">
+                                    <div className="hidden sm:flex items-center gap-2 text-xs font-bold font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                        <Clock size={12} className="opacity-70" />
+                                        <span>
+                                            {Math.floor(timeSpent / 60).toString().padStart(2, '0')}:
+                                            {(timeSpent % 60).toString().padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <div className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-center gap-1.5 sm:gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                        {Math.round(progressPercentage)}% Complete
+                                    </div>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto h-full flex flex-col">
-                                {!hasStarted && (
-                                    <div className="flex justify-center mb-4 sm:mb-8">
-                                        <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform text-sm sm:text-base">
-                                            <Mic size={18} className="sm:w-5 sm:h-5" />
-                                            Please say "START" to begin
-                                        </div>
+
+                            {/* Progress Bar */}
+                            <div className="w-full h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear"
+                                    style={{ width: `${progressPercentage}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Transcription / Content Area */}
+                        <div
+                            ref={transcriptionContainerRef}
+                            className="flex-1 overflow-y-auto p-4 sm:p-8 pt-24 sm:pt-28 pb-28 sm:pb-32 space-y-4 sm:space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm"
+                        >
+                            {!isLive ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6 animate-in fade-in zoom-in duration-500 px-4">
+                                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-2">
+                                        <Sparkles size={40} className="sm:w-12 sm:h-12 text-indigo-600 dark:text-indigo-400" />
                                     </div>
-                                )}
-
-                                {/* Dedicated Transcription Box */}
-                                <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md">
-                                    <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
-
-                                    <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar pr-2 sm:pr-4 pt-4 relative">
-                                        {outputTranscription ? (
-                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                                <div className="flex items-center gap-3 mb-4 sticky top-0 bg-white/90 dark:bg-slate-900/90 py-2 z-10 backdrop-blur-sm rounded-lg">
-                                                    <div className="flex items-center gap-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-indigo-600 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
-                                                        <Sparkles size={10} className="sm:w-3 sm:h-3" fill="currentColor" />
-                                                        AI Teacher
-                                                    </div>
-                                                    <span className="text-[10px] text-muted-foreground font-mono">{debugStatus}</span>
-                                                </div>
-                                                <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
-                                                    {outputTranscription}
-                                                    {isAiSpeakingRef.current && (
-                                                        <span className="inline-block ml-2 w-2 h-4 bg-indigo-500 animate-pulse align-middle" />
-                                                    )}
-                                                </p>
+                                    <div>
+                                        <h3 className="text-xl sm:text-2xl font-bold mb-2">Ready to Learn?</h3>
+                                        <p className="text-sm sm:text-base text-muted-foreground max-w-md">
+                                            Join the live voice class. The AI teacher will guide you through the entire lesson interactively.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 sm:space-y-8 max-w-3xl mx-auto h-full flex flex-col">
+                                    {!hasStarted && (
+                                        <div className="flex justify-center mb-4 sm:mb-8">
+                                            <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform text-sm sm:text-base">
+                                                <Mic size={18} className="sm:w-5 sm:h-5" />
+                                                Please say "START" to begin
                                             </div>
-                                        ) : (
-                                            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
-                                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
-                                                    <Volume2 size={24} className="sm:w-8 sm:h-8 text-indigo-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-base sm:text-lg text-foreground font-bold">
-                                                        {isAiSpeakingRef.current ? "Teacher is speaking..." : "Waiting for teacher..."}
+                                        </div>
+                                    )}
+
+                                    {/* Dedicated Transcription Box */}
+                                    <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md">
+                                        <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
+
+                                        <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar pr-2 sm:pr-4 pt-4 relative">
+                                            {outputTranscription ? (
+                                                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                                    <div className="flex items-center gap-3 mb-4 sticky top-0 bg-white/90 dark:bg-slate-900/90 py-2 z-10 backdrop-blur-sm rounded-lg">
+                                                        <div className="flex items-center gap-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-indigo-600 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
+                                                            <Sparkles size={10} className="sm:w-3 sm:h-3" fill="currentColor" />
+                                                            AI Teacher
+                                                        </div>
+                                                        <span className="text-[10px] text-muted-foreground font-mono">{debugStatus}</span>
+                                                    </div>
+                                                    <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-black dark:text-white font-medium whitespace-pre-wrap font-sans">
+                                                        {outputTranscription}
+                                                        {isAiSpeakingRef.current && (
+                                                            <span className="inline-block ml-2 w-2 h-4 bg-indigo-500 animate-pulse align-middle" />
+                                                        )}
                                                     </p>
-                                                    {isAiSpeakingRef.current && (
-                                                        <p className="text-xs sm:text-sm text-indigo-600 font-medium mt-2 animate-pulse">
-                                                            (Listening to audio stream...)
-                                                        </p>
-                                                    )}
-                                                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 font-mono">Status: {debugStatus}</p>
                                                 </div>
+                                            ) : (
+                                                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
+                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center animate-pulse">
+                                                        <Volume2 size={24} className="sm:w-8 sm:h-8 text-indigo-500" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-base sm:text-lg text-foreground font-bold">
+                                                            {isAiSpeakingRef.current ? "Teacher is speaking..." : "Waiting for teacher..."}
+                                                        </p>
+                                                        {isAiSpeakingRef.current && (
+                                                            <p className="text-xs sm:text-sm text-indigo-600 font-medium mt-2 animate-pulse">
+                                                                (Listening to audio stream...)
+                                                            </p>
+                                                        )}
+                                                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 font-mono">Status: {debugStatus}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10 pointer-events-none" />
+
+                                        {/* User Input Overlay - Compact */}
+                                        {inputTranscription && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 p-4 sm:p-6 text-xs sm:text-sm">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
+                                                </div>
+                                                <p className="text-slate-700 dark:text-slate-300 font-medium">{inputTranscription}</p>
                                             </div>
                                         )}
                                     </div>
-
-                                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10 pointer-events-none" />
-
-                                    {/* User Input Overlay - Compact */}
-                                    {inputTranscription && (
-                                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 p-4 sm:p-6 text-xs sm:text-sm">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
-                                            </div>
-                                            <p className="text-slate-700 dark:text-slate-300 font-medium">{inputTranscription}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Bottom Controls */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
-                        <div className="flex items-center justify-center gap-4 sm:gap-6">
-                            {!isLive ? (
-                                <button
-                                    onClick={startVoiceSession}
-                                    className="px-6 py-3 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-base sm:text-lg shadow-xl shadow-indigo-500/30 hover:scale-105 transition-all flex items-center gap-2 sm:gap-3"
-                                >
-                                    <Mic size={20} className="sm:w-6 sm:h-6" />
-                                    Enter Classroom
-                                </button>
-                            ) : (
-                                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
-                                    <div className="flex items-end gap-3 sm:gap-4 p-1.5 sm:p-2 bg-card border border-border rounded-full shadow-2xl w-full sm:w-auto justify-between sm:justify-start">
-                                        <button
-                                            onClick={stopAudio}
-                                            className="w-12 h-12 sm:w-14 sm:h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all shrink-0"
-                                            title="End Session"
-                                        >
-                                            <MicOff size={20} className="sm:w-6 sm:h-6" />
-                                        </button>
-                                        <div className="px-4 sm:px-6 py-3 sm:py-4 flex-1 sm:flex-none">
-                                            <div className="flex items-center gap-2 sm:gap-3 justify-center">
-                                                <div className="flex gap-1 h-3 sm:h-4 items-end">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className={`w-1 bg-indigo-500 rounded-full transition-all duration-100 ${isAiSpeakingRef.current ? 'animate-pulse h-full' : 'h-1'}`}
-                                                            style={{ height: isAiSpeakingRef.current ? `${Math.random() * 100}%` : '4px' }}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <span className="font-bold text-xs sm:text-sm text-muted-foreground uppercase tracking-widest whitespace-nowrap">
-                                                    {isAiSpeakingRef.current ? "Teacher Speaking..." : "Listening..."}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Complete Button */}
-                                    <button
-                                        disabled={!isCompletionEnabled}
-                                        onClick={async () => {
-                                            if (lesson) {
-                                                try {
-                                                    await fetch(`/api/learning/lessons/${lesson.id}/complete`, {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            user_email: userEmail,
-                                                            time_spent: Math.round(timeSpent / 60),
-                                                            quiz_score: 100
-                                                        })
-                                                    });
-                                                } catch (e) { console.error(e); }
-                                            }
-                                            stopAudio();
-                                            navigate('/dashboard'); // Go back to dashboard after completing
-                                        }}
-                                        className={`px-6 py-3 sm:px-6 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto ${isCompletionEnabled
-                                            ? 'bg-green-500 hover:bg-green-600 text-white hover:scale-105 animate-pulse'
-                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        {isCompletionEnabled ? <CheckCircle2 size={20} className="sm:w-6 sm:h-6" /> : <Loader2 size={20} className="animate-spin sm:w-6 sm:h-6" />}
-                                        {isCompletionEnabled ? 'Complete' : `${Math.round(sessionProgress)}%`}
-                                    </button>
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
 
-                {/* Connection Error Toast */}
-                {connectionError && (
-                    <div className="mt-4 px-6 py-3 bg-red-500/10 border border-red-500/20 text-red-600 rounded-full flex items-center gap-2 animate-in slide-in-from-bottom-2">
-                        <AlertCircle size={16} />
-                        <span className="font-bold text-sm">{connectionError}</span>
+                        {/* Bottom Controls */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-background via-background/90 to-transparent">
+                            <div className="flex items-center justify-center gap-4 sm:gap-6">
+                                {!isLive ? (
+                                    <button
+                                        onClick={startVoiceSession}
+                                        className="px-6 py-3 sm:px-8 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-base sm:text-lg shadow-xl shadow-indigo-500/30 hover:scale-105 transition-all flex items-center gap-2 sm:gap-3"
+                                    >
+                                        <Mic size={20} className="sm:w-6 sm:h-6" />
+                                        Enter Classroom
+                                    </button>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
+                                        <div className="flex items-end gap-3 sm:gap-4 p-1.5 sm:p-2 bg-card border border-border rounded-full shadow-2xl w-full sm:w-auto justify-between sm:justify-start">
+                                            <button
+                                                onClick={stopAudio}
+                                                className="w-12 h-12 sm:w-14 sm:h-14 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all shrink-0"
+                                                title="End Session"
+                                            >
+                                                <MicOff size={20} className="sm:w-6 sm:h-6" />
+                                            </button>
+                                            <div className="px-4 sm:px-6 py-3 sm:py-4 flex-1 sm:flex-none">
+                                                <div className="flex items-center gap-2 sm:gap-3 justify-center">
+                                                    <div className="flex gap-1 h-3 sm:h-4 items-end">
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className={`w-1 bg-indigo-500 rounded-full transition-all duration-100 ${isAiSpeakingRef.current ? 'animate-pulse h-full' : 'h-1'}`}
+                                                                style={{ height: isAiSpeakingRef.current ? `${Math.random() * 100}%` : '4px' }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <span className="font-bold text-xs sm:text-sm text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                                                        {isAiSpeakingRef.current ? "Teacher Speaking..." : "Listening..."}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Complete Button */}
+                                        <button
+                                            disabled={!isCompletionEnabled}
+                                            onClick={async () => {
+                                                if (lesson) {
+                                                    try {
+                                                        await fetch(`/api/learning/lessons/${lesson.id}/complete`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                user_email: userEmail,
+                                                                time_spent: Math.round(timeSpent / 60),
+                                                                quiz_score: 100
+                                                            })
+                                                        });
+                                                    } catch (e) { console.error(e); }
+                                                }
+                                                stopAudio();
+                                                navigate('/dashboard'); // Go back to dashboard after completing
+                                            }}
+                                            className={`px-6 py-3 sm:px-6 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto ${isCompletionEnabled
+                                                ? 'bg-green-500 hover:bg-green-600 text-white hover:scale-105 animate-pulse'
+                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            {isCompletionEnabled ? <CheckCircle2 size={20} className="sm:w-6 sm:h-6" /> : <Loader2 size={20} className="animate-spin sm:w-6 sm:h-6" />}
+                                            {isCompletionEnabled ? 'Complete' : `${Math.round(sessionProgress)}%`}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                )}
+
+                    {/* Connection Error Toast */}
+                    {connectionError && (
+                        <div className="mt-4 px-6 py-3 bg-red-500/10 border border-red-500/20 text-red-600 rounded-full flex items-center gap-2 animate-in slide-in-from-bottom-2">
+                            <AlertCircle size={16} />
+                            <span className="font-bold text-sm">{connectionError}</span>
+                        </div>
+                    )}
+                </div>
             </main>
             <Footer />
         </div>
     );
 }
-
-// Helpers from App.tsx/Lessons
-const isLikelyEnglish = (text: string) => {
-    // Simple heuristic or actual logic
-    return /^[a-zA-Z0-9\s.,!?'"-]+$/.test(text);
-};
