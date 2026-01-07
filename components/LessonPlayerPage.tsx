@@ -20,7 +20,8 @@ const PRESENTATION_URLS: Record<string, string> = {
     'l_efb_01_04': 'https://drive.google.com/file/d/11wLEbee92npt6VgNYdZRj46ernM15NmV/preview',
     'l_efb_02_01': 'https://drive.google.com/file/d/1bdCQTzes4OZ-ngoLpQLbJYnFxS9Q9CR_/preview',
     'l_efb_02_02': 'https://drive.google.com/file/d/1eTJJM2mFacK0aczwaeCHoGp6NhMZaXxD/preview',
-    'l_efb_02_03': 'https://drive.google.com/file/d/1QrArRdu6hwVumAP2617eJeXnSakZtGKh/preview'
+    'l_efb_02_03': 'https://drive.google.com/file/d/1QrArRdu6hwVumAP2617eJeXnSakZtGKh/preview',
+    'l_efb_02_04': 'https://drive.google.com/file/d/1Lwz7q8J_bp5MQ1Syh_gwuEE090ktyVYN/preview'
 };
 
 interface Lesson {
@@ -266,6 +267,14 @@ SLIDE 3: Short Answers - Yes, I do. / No, I do not.
 SLIDE 4: "Are you...?" Questions - Are you happy? Are you tired?
 SLIDE 5: "Is he/she...?" Questions - Is he a teacher? Is she sleeping?
 SLIDE 6: Practice & Review - Rapid fire Q&A practice.
+`,
+            'l_efb_02_04': `
+SLIDE 1: Title Slide - "Daily Use Words". Essential everyday vocabulary.
+SLIDE 2: Home Objects - Table, Chair, Bed. Use these in sentences.
+SLIDE 3: Electronics - Phone, Computer, TV. Pronunciation practice.
+SLIDE 4: Outside Words - House, Car, Bus. Going places.
+SLIDE 5: Personal Items - Bag, Watch, Pen. Things we carry.
+SLIDE 6: Review - Quick quiz on today's new words.
 `
         };
 
