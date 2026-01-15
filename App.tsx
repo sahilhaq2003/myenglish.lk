@@ -28,7 +28,7 @@ import {
   Settings, User, MapPin, TrendingUp, Info, RotateCcw, MessageSquare,
   Flame, Award, Layout, Book, Coffee, FileText, Mail, Headphones,
   Volume2, Keyboard, X, ChevronRight, Play, Pause, AlertCircle, Loader2,
-  LogOut, BarChart3, Calendar, ShieldCheck, Clock, HelpCircle, CheckCircle, Sparkles
+  LogOut, BarChart3, Calendar, ShieldCheck, Clock, HelpCircle, CheckCircle, Sparkles, Lock, Users
 } from 'lucide-react';
 import { useTheme } from './context/ThemeContext';
 
@@ -2149,10 +2149,20 @@ EXAMPLE OPENING:
                       </button>
                     )}
                     <button
-                      onClick={() => startModuleLearning(module)}
+                      onClick={() => {
+                        const isUnlocked = localStorage.getItem('myenglish_subscriptionStatus') === 'pro' || (localStorage.getItem('myenglish_subscriptionStatus') === 'trial' && localStorage.getItem('myenglish_trialEndAt') && new Date() < new Date(localStorage.getItem('myenglish_trialEndAt') || ''));
+                        if (module.level !== 'Beginner' && !isUnlocked) {
+                          alert("This is a Premium lesson. Please upgrade to access advanced modules.");
+                          navigate('/pricing');
+                          return;
+                        }
+                        startModuleLearning(module);
+                      }}
                       className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-bold group-hover:gradient-bg transition-all shadow-lg shadow-gray-200 dark:shadow-black/20 hover:scale-105 active:scale-95"
                     >
-                      {module.progress === 100 ? 'Review' : module.progress > 0 ? 'Continue' : 'Start'}
+                      {module.progress === 100 ? 'Review' : module.progress > 0 ? 'Continue' :
+                        (module.level !== 'Beginner' && !(localStorage.getItem('myenglish_subscriptionStatus') === 'pro' || (localStorage.getItem('myenglish_subscriptionStatus') === 'trial' && localStorage.getItem('myenglish_trialEndAt') && new Date() < new Date(localStorage.getItem('myenglish_trialEndAt') || ''))))
+                          ? 'Unlock Premium' : 'Start'}
                     </button>
                   </div>
                 </div>
@@ -2208,12 +2218,27 @@ EXAMPLE OPENING:
                   "{persona.personality} conversation. Ready to help you with {persona.scenario?.toLowerCase()}."
                 </p>
 
-                <button
-                  onClick={() => startRoleplay(persona)}
-                  className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-gray-200"
-                >
-                  Start Speaking <Mic size={18} />
-                </button>
+                {(() => {
+                  const isUnlocked = localStorage.getItem('myenglish_subscriptionStatus') === 'pro' || (localStorage.getItem('myenglish_subscriptionStatus') === 'trial' && localStorage.getItem('myenglish_trialEndAt') && new Date() < new Date(localStorage.getItem('myenglish_trialEndAt') || ''));
+                  const isPersonaLocked = !isUnlocked && PERSONAS.indexOf(persona) > 1;
+
+                  return (
+                    <button
+                      onClick={() => {
+                        if (isPersonaLocked) {
+                          alert("This AI Persona is available for Pro users. Please upgrade to practice with " + persona.name + ".");
+                          navigate('/pricing');
+                          return;
+                        }
+                        startRoleplay(persona);
+                      }}
+                      className={`w-full py-4 rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-gray-200 ${isPersonaLocked ? 'bg-slate-800 text-white hover:bg-slate-900' : 'bg-gray-900 text-white hover:bg-black'
+                        }`}
+                    >
+                      {isPersonaLocked ? 'Unlock Premium' : 'Start Speaking'} {isPersonaLocked ? <Users size={18} /> : <Mic size={18} />}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           );
