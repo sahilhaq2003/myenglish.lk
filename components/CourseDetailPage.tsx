@@ -90,9 +90,9 @@ export function CourseDetailPage() {
         if (!course) return;
 
         // Check if premium course requires unlock
-        if (course.price && course.price > 0 && !isUnlocked) {
+        if (Number(course.price) > 0 && !isUnlocked) {
             alert("This is a Premium course. Please upgrade your plan to enroll.");
-            navigate('/#pricing');
+            navigate('/pricing');
             return;
         }
 
@@ -242,7 +242,7 @@ export function CourseDetailPage() {
                                     onClick={handleEnroll}
                                     className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-50 transition-all flex items-center gap-2 mb-8"
                                 >
-                                    {course.price && course.price > 0 && !isUnlocked ? "Unlock Premium" : "Enroll Now"} <ArrowLeft className="rotate-180" size={20} />
+                                    {Number(course.price) > 0 && !isUnlocked ? "Unlock Premium" : "Enroll Now"} <ArrowLeft className="rotate-180" size={20} />
                                 </button>
                             )}
 
