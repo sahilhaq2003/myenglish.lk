@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, Info, HelpCircle } from 'lucide-react';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -9,6 +10,37 @@ interface PricingPageProps {
 }
 
 export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        setIsLoggedIn(localStorage.getItem('myenglish_token') === 'logged_in');
+        setUserEmail(localStorage.getItem('myenglish_userEmail') || '');
+    }, []);
+
+    const handleUpgrade = async () => {
+        if (!userEmail) return;
+        try {
+            const res = await fetch('/api/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userEmail })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Rank Upgraded to PRO! All courses unlocked.');
+                // Update local storage
+                localStorage.setItem('myenglish_subscriptionStatus', 'pro');
+                // Navigate to dashboard
+                navigate('/dashboard');
+            } else {
+                alert('Upgrade failed: ' + data.message);
+            }
+        } catch (e) {
+            alert('Error upgrading subscription');
+        }
+    };
 
 
     const plans = [
@@ -37,7 +69,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                 'Certificate of completion',
                 'Ad-free experience'
             ],
-            cta: 'Start 1-Day Free Trial',
+            cta: 'Start 3-Day Free Trial',
             popular: true
         },
 
@@ -91,13 +123,19 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                                 </div>
 
                                 <button
-                                    onClick={onGetStarted}
+                                    onClick={() => {
+                                        if (plan.name === 'Pro Learner' && isLoggedIn) {
+                                            handleUpgrade();
+                                        } else {
+                                            onGetStarted();
+                                        }
+                                    }}
                                     className={`w-full py-4 rounded-xl font-bold mb-8 transition-all ${plan.popular
                                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
                                         : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                                         }`}
                                 >
-                                    {plan.cta}
+                                    {plan.name === 'Pro Learner' && isLoggedIn ? 'Upgrade Now' : plan.cta}
                                 </button>
 
                                 <div className="space-y-4">

@@ -40,6 +40,7 @@ export function CourseDetailPage() {
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [checkingEnrollment, setCheckingEnrollment] = useState(true);
     const userEmail = localStorage.getItem('myenglish_userEmail');
+    const [isUnlocked, setIsUnlocked] = useState(false);
 
     useEffect(() => {
         if (courseId) {
@@ -50,6 +51,21 @@ export function CourseDetailPage() {
                 setCheckingEnrollment(false);
             }
         }
+
+        // Check subscription status
+        const status = localStorage.getItem('myenglish_subscriptionStatus');
+        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+
+        let unlocked = false;
+        const now = new Date();
+
+        if (status === 'pro') {
+            unlocked = true;
+        } else if (status === 'trial' && trialEnd) {
+            if (now < new Date(trialEnd)) unlocked = true;
+        }
+        setIsUnlocked(unlocked);
+
     }, [courseId, userEmail]);
 
     const checkEnrollment = async () => {
@@ -72,6 +88,13 @@ export function CourseDetailPage() {
         }
 
         if (!course) return;
+
+        // Check if premium course requires unlock
+        if (course.price && course.price > 0 && !isUnlocked) {
+            alert("This is a Premium course. Please upgrade your plan to enroll.");
+            navigate('/#pricing');
+            return;
+        }
 
         try {
             const response = await fetch('/api/enrollments', {
@@ -141,15 +164,15 @@ export function CourseDetailPage() {
     };
 
     const startLesson = (lessonId: string) => {
-        if (!isEnrolled) {
-            alert("Please enroll in this course to access the lessons.");
+        if (!isEnrolled && !isUnlocked) {
+            alert("Please enroll in this course or upgrade to access the lessons.");
             return;
         }
         navigate(`/learning/lesson/${lessonId}`);
     };
 
     const getStatusIcon = (status: string) => {
-        if (!isEnrolled) return <Lock className="text-gray-400" size={16} />;
+        if (!isEnrolled && !isUnlocked) return <Lock className="text-gray-400" size={16} />;
 
         switch (status) {
             case 'completed':
@@ -219,7 +242,7 @@ export function CourseDetailPage() {
                                     onClick={handleEnroll}
                                     className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-50 transition-all flex items-center gap-2 mb-8"
                                 >
-                                    Enroll Now <ArrowLeft className="rotate-180" size={20} />
+                                    {course.price && course.price > 0 && !isUnlocked ? "Unlock Premium" : "Enroll Now"} <ArrowLeft className="rotate-180" size={20} />
                                 </button>
                             )}
 

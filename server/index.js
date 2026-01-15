@@ -249,7 +249,9 @@ app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const query = 'INSERT INTO users (username, email, password, first_name, birthday) VALUES (?, ?, ?, ?, ?)';
+        const query = `INSERT INTO users 
+            (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
+            VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`;
         pool.query(query, [username, email, hashedPassword, first_name, birthday], (err, result) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
@@ -305,7 +307,10 @@ app.post('/api/login', (req, res) => {
                 learning_goal: user.learning_goal,
                 daily_goal: user.daily_goal,
                 first_name: user.first_name,
-                birthday: user.birthday
+                birthday: user.birthday,
+                subscription_status: user.subscription_status,
+                trial_end_at: user.trial_end_at,
+                pro_end_at: user.pro_end_at
             }
         });
     });
@@ -317,7 +322,7 @@ app.get('/api/profile', (req, res) => {
     if (!email) return res.status(400).json({ message: 'Email required' });
 
     console.log('Getting profile for email:', email);
-    const query = 'SELECT id, username, email, bio, phone, location, avatar_url, current_level, learning_goal, daily_goal, first_name, birthday, created_at FROM users WHERE email = ?';
+    const query = 'SELECT id, username, email, bio, phone, location, avatar_url, current_level, learning_goal, daily_goal, first_name, birthday, created_at, subscription_status, trial_end_at, pro_end_at FROM users WHERE email = ?';
     pool.query(query, [email], (err, results) => {
         if (err) {
             console.error('Error fetching profile:', err);
@@ -403,6 +408,45 @@ app.delete('/api/profile', (req, res) => {
         }
         console.log('Account deleted successfully for:', email);
         res.json({ message: 'Account deleted successfully' });
+    });
+});
+
+// Upgrade Subscription (Mock for now)
+app.post('/api/upgrade', (req, res) => {
+    const { email } = req.body;
+    console.log('Upgrading subscription for:', email);
+
+    if (!email) return res.status(400).json({ message: 'Email required' });
+
+    // Set to 'pro' and give 1 year for now (or perpetual)
+    const query = `UPDATE users SET 
+            subscription_status = 'pro',
+            pro_start_at = NOW(),
+            pro_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR)
+            WHERE email = ?`;
+
+    pool.query(query, [email], (err, result) => {
+        if (err) {
+            console.error('Error upgrading subscription:', err);
+            return res.status(500).json({ message: 'Server error upgrading' });
+        }
+        console.log('Subscription upgraded for:', email);
+
+        // Return updated user data
+        const getQuery = 'SELECT * FROM users WHERE email = ?';
+        pool.query(getQuery, [email], (err, results) => {
+            if (err || results.length === 0) {
+                return res.json({ message: 'Upgraded, but failed to fetch updated profile' });
+            }
+            res.json({
+                message: 'Upgrade successful',
+                user: {
+                    ...results[0],
+                    // ensure we don't send password
+                    password: undefined
+                }
+            });
+        });
     });
 });
 

@@ -35,6 +35,11 @@ export function LoginPage() {
             if (data.user.avatar_url) {
                 localStorage.setItem('myenglish_avatarUrl', data.user.avatar_url);
             }
+            // Store subscription info
+            localStorage.setItem('myenglish_subscriptionStatus', data.user.subscription_status || 'free');
+            localStorage.setItem('myenglish_trialEndAt', data.user.trial_end_at || '');
+            localStorage.setItem('myenglish_proEndAt', data.user.pro_end_at || '');
+
             navigate('/dashboard');
 
         } catch (err: any) {
