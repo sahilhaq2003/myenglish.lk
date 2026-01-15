@@ -66,10 +66,12 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
         else setTheme('light');
     };
 
+    const isPro = localStorage.getItem('myenglish_subscriptionStatus') === 'pro';
+
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                ? 'bg-background/80 backdrop-blur-md border-b border-border py-4 shadow-sm'
+                ? 'glass-panel py-4' // Use new glass-panel util
                 : 'bg-transparent py-6'
                 }`}
         >
@@ -84,9 +86,14 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                         alt="MyEnglish.lk Logo"
                         className="w-10 h-10 rounded-xl shadow-lg group-hover:scale-105 transition-transform"
                     />
-                    <span className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80">
-                        MyEnglish.lk
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="text-xl font-black tracking-tight leading-none text-foreground">
+                            MyEnglish<span className="text-indigo-600 dark:text-indigo-400">.lk</span>
+                        </span>
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                            AI Learning Platform
+                        </span>
+                    </div>
                 </div>
 
                 {/* Desktop Navigation */}
@@ -95,7 +102,7 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                         <button
                             key={link.label}
                             onClick={() => handleNavClick(link.href)}
-                            className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors bg-transparent border-none p-0 cursor-pointer"
+                            className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors bg-transparent border-none p-0 cursor-pointer hover:pro-gradient-text"
                         >
                             {link.label}
                         </button>
@@ -104,7 +111,6 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-4">
-                    {/* Theme Toggle - Compact */}
                     {/* Theme Toggle - 3-State Segmented */}
                     <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800/80 rounded-full border border-zinc-200 dark:border-zinc-700 shadow-inner">
                         <button
@@ -140,6 +146,11 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
 
                     {localStorage.getItem('myenglish_token') === 'logged_in' ? (
                         <div className="flex items-center gap-4">
+                            {isPro && (
+                                <span className="pro-badge animate-pulse">
+                                    PRO
+                                </span>
+                            )}
                             <button
                                 onClick={() => navigate('/dashboard')}
                                 className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
@@ -148,7 +159,7 @@ export function Header({ onSignIn, onGetStarted, onExploreCourses }: HeaderProps
                             </button>
                             <button
                                 onClick={() => navigate('/profile')}
-                                className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/20 transition-all overflow-hidden"
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all overflow-hidden ${isPro ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-background' : 'bg-primary/10 border border-primary/20 hover:bg-primary/20'}`}
                             >
                                 <img
                                     src={localStorage.getItem('myenglish_avatarUrl') || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
