@@ -95,74 +95,59 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
 
                     {/* Pricing Cards */}
                     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        {plans.map((plan) => {
-                            const isPro = localStorage.getItem('myenglish_subscriptionStatus') === 'pro';
-                            const isCurrentPlan = (plan.name === 'Pro Learner' && isPro) || (plan.name === 'Free Starter' && !isPro);
-
-                            return (
-                                <div
-                                    key={plan.name}
-                                    className={`relative bg-card rounded-[2rem] p-8 border-2 transition-all hover:-translate-y-2 ${plan.popular
-                                        ? 'border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
-                                        : 'border-border hover:border-primary/50'
-                                        } ${isCurrentPlan ? 'ring-4 ring-green-500/20' : ''}`}
-                                >
-                                    {plan.popular && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm font-bold rounded-full shadow-lg">
-                                            Most Popular
-                                        </div>
-                                    )}
-
-                                    {isCurrentPlan && (
-                                        <div className="absolute top-4 right-4 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800 flex items-center gap-1">
-                                            <Check size={12} strokeWidth={3} /> Current Plan
-                                        </div>
-                                    )}
-
-                                    <div className="mb-8">
-                                        <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                                        <p className="text-muted-foreground text-sm h-10">{plan.description}</p>
+                        {plans.map((plan) => (
+                            <div
+                                key={plan.name}
+                                className={`relative bg-card rounded-[2rem] p-8 border-2 transition-all hover:-translate-y-2 ${plan.popular
+                                    ? 'border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
+                                    : 'border-border hover:border-primary/50'
+                                    }`}
+                            >
+                                {plan.popular && (
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-primary text-primary-foreground text-sm font-bold rounded-full shadow-lg">
+                                        Most Popular
                                     </div>
+                                )}
 
-                                    <div className="mb-8">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-4xl font-black text-foreground">${plan.price}</span>
-                                            <span className="text-muted-foreground">/mo</span>
-                                        </div>
-
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            if (isCurrentPlan) return;
-                                            if (plan.name === 'Pro Learner' && isLoggedIn) {
-                                                handleUpgrade();
-                                            } else {
-                                                onGetStarted();
-                                            }
-                                        }}
-                                        disabled={isCurrentPlan}
-                                        className={`w-full py-4 rounded-xl font-bold mb-8 transition-all ${isCurrentPlan
-                                                ? 'bg-green-600 text-white cursor-default opacity-90'
-                                                : plan.popular
-                                                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
-                                                    : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-                                            }`}
-                                    >
-                                        {isCurrentPlan ? 'Active Plan' : (plan.name === 'Pro Learner' && isLoggedIn ? 'Upgrade Now' : plan.cta)}
-                                    </button>
-
-                                    <div className="space-y-4">
-                                        {plan.features.map((feature, i) => (
-                                            <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                                <Check size={18} className="text-primary mt-0.5 shrink-0" />
-                                                <span>{feature}</span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="mb-8">
+                                    <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                                    <p className="text-muted-foreground text-sm h-10">{plan.description}</p>
                                 </div>
-                            )
-                        })}
+
+                                <div className="mb-8">
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-4xl font-black text-foreground">${plan.price}</span>
+                                        <span className="text-muted-foreground">/mo</span>
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        if (plan.name === 'Pro Learner' && isLoggedIn) {
+                                            handleUpgrade();
+                                        } else {
+                                            onGetStarted();
+                                        }
+                                    }}
+                                    className={`w-full py-4 rounded-xl font-bold mb-8 transition-all ${plan.popular
+                                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20'
+                                        : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                                        }`}
+                                >
+                                    {plan.name === 'Pro Learner' && isLoggedIn ? 'Upgrade Now' : plan.cta}
+                                </button>
+
+                                <div className="space-y-4">
+                                    {plan.features.map((feature, i) => (
+                                        <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                                            <Check size={18} className="text-primary mt-0.5 shrink-0" />
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* FAQ Preview */}

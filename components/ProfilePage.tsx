@@ -343,9 +343,6 @@ export function ProfilePage() {
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {localStorage.getItem('myenglish_subscriptionStatus') === 'pro' && (
-                                            <span className="pro-badge animate-pulse">PRO Account</span>
-                                        )}
                                         <span className="px-4 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-bold border border-indigo-100 dark:border-indigo-800">
                                             {profile.current_level || 'Beginner'}
                                         </span>
