@@ -1688,15 +1688,7 @@ EXAMPLE OPENING:
               <p className="text-muted-foreground font-medium">Continue your learning journey</p>
             </div>
             <button
-              onClick={() => {
-                navigate('/');
-                setTimeout(() => {
-                  const coursesSection = document.getElementById('courses');
-                  if (coursesSection) {
-                    coursesSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }, 100);
-              }}
+              onClick={() => navigate('/courses')}
               className="px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
             >
               Browse All Courses →
@@ -1718,15 +1710,7 @@ EXAMPLE OPENING:
                 Start your learning journey by enrolling in courses that match your goals.
               </p>
               <button
-                onClick={() => {
-                  navigate('/');
-                  setTimeout(() => {
-                    const coursesSection = document.getElementById('courses');
-                    if (coursesSection) {
-                      coursesSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }, 100);
-                }}
+                onClick={() => navigate('/courses')}
                 className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2"
               >
                 Explore Courses
