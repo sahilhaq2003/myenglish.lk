@@ -84,19 +84,28 @@ export function CoursesPage() {
         }
     };
 
+    // Check subscription status
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+
+    const isPro = subStatus === 'pro';
+    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+    const isUnlocked = isPro || isTrialActive;
+
+    const isLocked = (course: Course) => {
+        // If unlocked, not locked.
+        if (isUnlocked) return false;
+        // If English for Beginners, not locked.
+        if (course.title === 'English for Beginners') return false;
+        // Otherwise, locked.
+        return true;
+    };
+
     const handleEnroll = async (course: Course) => {
         if (!userEmail) {
             navigate('/login');
             return;
         }
-
-        // Check subscription status
-        const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
-        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
-
-        const isPro = subStatus === 'pro';
-        const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
-        const isUnlocked = isPro || isTrialActive;
 
         // Ensure price is treated as a number
         const price = Number(course.price);
@@ -317,13 +326,13 @@ export function CoursesPage() {
                                                 <div className="space-y-3">
                                                     <button
                                                         onClick={() => handleEnroll(course)}
-                                                        className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${Number(course.price) > 0 && !(localStorage.getItem('myenglish_subscriptionStatus') === 'pro' || (localStorage.getItem('myenglish_subscriptionStatus') === 'trial' && localStorage.getItem('myenglish_trialEndAt') && new Date() < new Date(localStorage.getItem('myenglish_trialEndAt') || '')))
-                                                            ? 'bg-slate-800 text-white hover:bg-slate-900 shadow-slate-900/20'
+                                                        className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${isLocked(course)
+                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-orange-500/25'
                                                             : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
                                                             }`}
                                                     >
-                                                        {Number(course.price) > 0 && !(localStorage.getItem('myenglish_subscriptionStatus') === 'pro' || (localStorage.getItem('myenglish_subscriptionStatus') === 'trial' && localStorage.getItem('myenglish_trialEndAt') && new Date() < new Date(localStorage.getItem('myenglish_trialEndAt') || '')))
-                                                            ? <><Users size={18} /> Unlock Premium</>
+                                                        {isLocked(course)
+                                                            ? <><Sparkles size={18} fill="currentColor" /> Unlock Premium</>
                                                             : <><Play size={18} className="fill-current" /> Enroll Now</>
                                                         }
                                                     </button>

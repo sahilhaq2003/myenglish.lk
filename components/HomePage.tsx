@@ -152,22 +152,22 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         return matchesSearch && matchesLevel;
     });
 
+    // Check subscription status (moved to top level for UI)
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+    const isPro = subStatus === 'pro';
+    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+    const isUnlocked = isPro || isTrialActive;
+
     const handleEnrollCourse = async (course: typeof featuredCourses[0]) => {
         // Check if user is logged in
         const isLoggedIn = localStorage.getItem('myenglish_token') === 'logged_in';
         if (!isLoggedIn) {
             onGetStarted();
+            return;
         }
 
         const userEmail = localStorage.getItem('myenglish_userEmail');
-
-        // Check subscription status
-        const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
-        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
-
-        const isPro = subStatus === 'pro';
-        const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
-        const isUnlocked = isPro || isTrialActive;
 
         // Restriction: Free users can ONLY enroll in 'English for Beginners'
         if (!isUnlocked && course.title !== 'English for Beginners') {
@@ -480,13 +480,23 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                         </div>
 
                                         <div className="flex items-center justify-between pt-4 border-t border-border">
-                                            <button
-                                                onClick={() => handleEnrollCourse(course)}
-                                                className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                Enroll Now
-                                                <Play size={16} />
-                                            </button>
+                                            {!isUnlocked && course.title !== 'English for Beginners' ? (
+                                                <button
+                                                    onClick={() => handleEnrollCourse(course)}
+                                                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <Sparkles size={16} fill="currentColor" />
+                                                    Unlock Premium
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleEnrollCourse(course)}
+                                                    className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    Enroll Now
+                                                    <Play size={16} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
