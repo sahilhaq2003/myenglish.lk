@@ -251,7 +251,7 @@ app.post('/api/signup', async (req, res) => {
 
         const query = `INSERT INTO users 
             (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
-            VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`;
+            VALUES (?, ?, ?, ?, ?, 'free', NULL, NULL)`;
         pool.query(query, [username, email, hashedPassword, first_name, birthday], (err, result) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
