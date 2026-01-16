@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, Play, CheckCircle2, Lock, ChevronRight, Loader2, ArrowLeft, TrendingUp, Award } from 'lucide-react';
 import { Header } from './Header';
@@ -41,6 +41,7 @@ export function CourseDetailPage() {
     const [checkingEnrollment, setCheckingEnrollment] = useState(true);
     const userEmail = localStorage.getItem('myenglish_userEmail');
     const [isUnlocked, setIsUnlocked] = useState(false);
+    const learningPathRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (courseId) {
@@ -130,6 +131,19 @@ export function CourseDetailPage() {
             if (response.ok) {
                 setIsEnrolled(true);
                 alert(`Successfully enrolled in "${course.title}"!`);
+
+                // Auto-expand first module and scroll to lessons
+                if (course.modules && course.modules.length > 0) {
+                    const sortedModules = [...course.modules].sort((a, b) => a.order_index - b.order_index);
+                    const firstModule = sortedModules[0];
+                    if (firstModule) {
+                        fetchModuleLessons(firstModule.id);
+                        // Small timeout to ensure state update and DOM render before scrolling
+                        setTimeout(() => {
+                            learningPathRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                    }
+                }
             } else {
                 const data = await response.json();
                 throw new Error(data.message || 'Enrollment failed');
@@ -324,7 +338,7 @@ export function CourseDetailPage() {
                     </div>
 
                     {/* Learning Path - Modules */}
-                    <div className="space-y-6">
+                    <div ref={learningPathRef} className="space-y-6">
                         <h2 className="text-3xl font-black mb-6">Learning Path</h2>
 
                         {course.modules && course.modules.length > 0 ? (

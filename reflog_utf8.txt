@@ -1,0 +1,112 @@
+﻿d172dd4 HEAD@{0}: commit: styles fix
+1afa11e HEAD@{1}: commit: style update
+83820cf HEAD@{2}: commit: update
+4c7d9d3 HEAD@{3}: commit: fix enrollment
+9ef7943 HEAD@{4}: pull --ff --recurse-submodules --progress origin: Fast-forward
+1de8d6f HEAD@{5}: reset: moving to 1de8d6fc6f191a185b1331306a7ce3d7b9170896
+9ef7943 HEAD@{6}: pull --ff --recurse-submodules --progress origin: Fast-forward
+019fc71 HEAD@{7}: reset: moving to 019fc71
+9ef7943 HEAD@{8}: pull --ff --recurse-submodules --progress origin: Merge made by the 'ort' strategy.
+5c7485b HEAD@{9}: cherry-pick: comment
+1de8d6f HEAD@{10}: reset: moving to 1de8d6f
+019fc71 HEAD@{11}: commit: comment
+f726097 HEAD@{12}: pull --ff --recurse-submodules --progress origin: Fast-forward
+1de8d6f HEAD@{13}: reset: moving to 1de8d6f
+d33bfe1 HEAD@{14}: reset: moving to d33bfe1
+f726097 HEAD@{15}: checkout: moving from copy3 to main
+4815fea HEAD@{16}: checkout: moving from main to copy3
+f726097 HEAD@{17}: reset: moving to HEAD@{1}
+4815fea HEAD@{18}: reset: moving to copy3
+f726097 HEAD@{19}: checkout: moving from copy3 to main
+4815fea HEAD@{20}: checkout: moving from main to copy3
+f726097 HEAD@{21}: commit: a
+f5f0b0d HEAD@{22}: commit: remove updates
+5762b89 HEAD@{23}: commit: update
+ea32cf1 HEAD@{24}: revert: Revert "Fix: Change new signup users from trial to free status"
+031eebf HEAD@{25}: revert: Revert "Feature: Add 7-day free trial after pro subscription ends"
+531b61e HEAD@{26}: revert: Revert "Fix: Change trial period from 7 days to 1 day after pro subscription"
+8904ca1 HEAD@{27}: revert: Revert "Fix: Change Pro subscription from 1 year to 1 month"
+5d98136 HEAD@{28}: commit: Fix: Change Pro subscription from 1 year to 1 month
+b75ff84 HEAD@{29}: commit: Fix: Change trial period from 7 days to 1 day after pro subscription
+66aecae HEAD@{30}: commit: Feature: Add 7-day free trial after pro subscription ends
+4af9210 HEAD@{31}: commit: Fix: Change new signup users from trial to free status
+8dc2f9e HEAD@{32}: commit: Fix: Enforce pro account restrictions for premium course enrollment
+523c5b6 HEAD@{33}: commit: Directly link premium course buttons to pricing page
+b1ecef9 HEAD@{34}: commit: Enhance enrollment restrictions and visual cues for premium courses
+b0b4f08 HEAD@{35}: commit: Restrict free users enrollment to English for Beginners only
+17df431 HEAD@{36}: commit: Fix profile delete function and update course details and lesson player components
+233e340 HEAD@{37}: checkout: moving from copy3 to main
+4815fea HEAD@{38}: checkout: moving from copy1 to copy3
+678bd98 HEAD@{39}: checkout: moving from main to copy1
+233e340 HEAD@{40}: revert: Revert "Enhance Pro user experience: Indicate active plan in pricing and display Pro badge in profile"
+78a5d9d HEAD@{41}: reset: moving to HEAD~1
+d3fa9f4 HEAD@{42}: reset: moving to HEAD~1
+af4f104 HEAD@{43}: commit: Fix ProfilePage API URL and remove Tailwind CDN
+d3fa9f4 HEAD@{44}: commit: Restrict free users to English for Beginners course only
+78a5d9d HEAD@{45}: commit: Enhance Pro user experience: Indicate active plan in pricing and display Pro badge in profile
+596808d HEAD@{46}: commit: Enhance UI with premium Pro aesthetics: glassmorphism header, gold gradients, and Pro badge
+ab0b48c HEAD@{47}: commit: Fix premium content locking logic with strict type checking
+9333b60 HEAD@{48}: commit: Implement content locking logic: Lock premium courses, advanced modules, and extra AI personas for non-Pro users
+1de8d6f HEAD@{49}: commit: Implement subscription logic: 3-day trial on signup and Pro upgrade
+4815fea HEAD@{50}: commit: Add presentation for 'Daily Use Words' (l_efb_02_04)
+30003f0 HEAD@{51}: commit: Add custom logo to Header
+99b384a HEAD@{52}: reset: moving to HEAD~1
+a91a111 HEAD@{53}: reset: moving to HEAD~1
+c278cc9 HEAD@{54}: commit: Fix microphone not releasing when navigating away from lesson
+a91a111 HEAD@{55}: commit: Update footer copyright separator
+99b384a HEAD@{56}: reset: moving to HEAD~1
+6b2905c HEAD@{57}: commit: Show course completion percentage on dashboard (HomePage)
+99b384a HEAD@{58}: commit: Fix missing transcription by parsing text from modelTurn parts
+03c599e HEAD@{59}: commit: Add presentation for 'Yes/No Questions' (l_efb_02_03)
+6abcdd6 HEAD@{60}: commit: Add eye blinking animation to AiAvatar
+4c55607 HEAD@{61}: commit: Update AI teacher avatar to be more realistic
+e22b564 HEAD@{62}: commit: Move AI Avatar above transcription to ensure visibility
+66d5f44 HEAD@{63}: commit: Add responsive AI Avatar with lip sync animation
+5a9e81c HEAD@{64}: commit: Add presentation slides and plan for Simple Sentences (l_efb_02_02)
+4284b99 HEAD@{65}: commit: Add presentation slides and plan for Common English Words (l_efb_02_01)
+39f728b HEAD@{66}: commit: Add presentation slides and plan for Basic Pronunciation (l_efb_01_04)
+a15d132 HEAD@{67}: commit: Reduce font size of AI transcription
+6a2df0e HEAD@{68}: commit: Make start button clickable and ensure prompt disappears on start
+84b7b4c HEAD@{69}: commit: Correctly attach slides to Vowels and Consonants lesson
+9b9d86d HEAD@{70}: commit: Add presentation slides for Basic Pronunciation lesson
+b86f82c HEAD@{71}: commit: Reposition AI Teacher badge to avoid visual distraction
+068428c HEAD@{72}: commit: Reinforce strict slide-following behavior in AI teacher
+506028d HEAD@{73}: commit: Add slide presentation for English Alphabet lesson
+fb8f601 HEAD@{74}: commit: Activate complete button after 10% progress
+6224102 HEAD@{75}: commit: Navigate to module page after completion instead of dashboard
+c19cc06 HEAD@{76}: commit: Enhance AI teaching style and pacing instructions
+24bfeb1 HEAD@{77}: commit: Refine AI instructions to avoid saying Slide numbers
+4994fbd HEAD@{78}: commit: Remove explicit slide navigation prompts from AI instructions
+f265fc8 HEAD@{79}: commit: Match presentation frame size to virtual classroom
+cd3a9b9 HEAD@{80}: commit: Fix presentation slide order and aspect ratio
+2fba3dc HEAD@{81}: commit: Update AI instruction for slide-by-slide teaching
+a55e8f4 HEAD@{82}: commit: Add presentation mode to LessonPlayerPage
+d33bfe1 HEAD@{83}: commit: Update trial duration from 7 days to 1 day
+8eec6df HEAD@{84}: commit: Remove annual billing option, default to monthly pricing only
+11e5fb5 HEAD@{85}: commit: Update pricing: remove Business plan, update Pro pricing to /mo and /yr
+729f661 HEAD@{86}: commit: Fix microphone not stopping when leaving lesson page
+f010aa0 HEAD@{87}: commit: Make LessonPlayer and ModuleLearningView mobile friendly
+b207767 HEAD@{88}: commit: Fix profile pic not showing on first login
+f43bcc9 HEAD@{89}: commit: Fix-hanging-brace
+9a80669 HEAD@{90}: commit: Disable-auto-migrations
+73eea5c HEAD@{91}: commit: Optimize-Vercel-Function-Config
+54414ea HEAD@{92}: commit: Allow-server-start-without-password
+76648ec HEAD@{93}: commit: Add-SSL-and-test-route
+d15d744 HEAD@{94}: commit: Expose-errors-for-debugging
+a24d438 HEAD@{95}: commit: Fix-Vercel-405-Error
+9b03892 HEAD@{96}: commit: Remove-exposed-API-key-from-documentation
+487db13 HEAD@{97}: commit: Configure-Vercel-Deployment
+60d6e72 HEAD@{98}: commit: SECURITY FIX: Remove hardcoded credentials, use environment variables + Fixed all API URLs for production
+e238f1a HEAD@{99}: commit: feat: Add core application pages, server, and AWS deployment scripts with guides.
+cdf6f54 HEAD@{100}: commit: feat: Restructure documentation into a dedicated `docs` directory and add new core UI components for pages like home, privacy, terms, and cookies.
+678bd98 HEAD@{101}: commit: feat: Implement HomePage and ProfilePage components with user profile management and learning paths
+19e9131 HEAD@{102}: pull --tags origin main: Merge made by the 'ort' strategy.
+01b4536 HEAD@{103}: commit: feat: Implement client-side routing with new Home, Login, Signup, Pricing, Header, and Footer pages, and add backend server dependencies.
+426049a HEAD@{104}: commit: Secure: Stop tracking .env file and apply bug fixes
+47c673b HEAD@{105}: commit: revert: Remove React Router implementation, update API key, and refine AI system instructions.
+37ef5cc HEAD@{106}: commit: feat: Enhanced AI lessons, modern avatars, routing setup, and UI improvements
+1c87615 HEAD@{107}: commit: Add localStorage persistence, responsive design, professional theme, sticky controls, and English-only enforcement
+cb69d29 HEAD@{108}: commit: Add separate Start and Stop microphone buttons for better control
+3056ba2 HEAD@{109}: commit: Add AI-powered learning for all modules - Grammar, Vocabulary, Speaking, Listening, Reading, Writing
+0d9aa93 HEAD@{110}: Branch: renamed refs/heads/master to refs/heads/main
+0d9aa93 HEAD@{112}: commit (initial): Initial commit: myenglish.lk app with comprehensive learning modules
