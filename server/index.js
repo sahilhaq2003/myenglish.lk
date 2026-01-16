@@ -419,13 +419,13 @@ app.post('/api/upgrade', (req, res) => {
     if (!email) return res.status(400).json({ message: 'Email required' });
 
     // Set to 'pro' and give 1 year for now (or perpetual)
-    // Also give 1 day of free trial after pro subscription ends
+    // Also give 7 days of free trial after pro subscription ends
     const query = `UPDATE users SET 
             subscription_status = 'pro',
             pro_start_at = NOW(),
             pro_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR),
             trial_start_at = DATE_ADD(NOW(), INTERVAL 1 YEAR),
-            trial_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR + INTERVAL 1 DAY)
+            trial_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR + INTERVAL 7 DAY)
             WHERE email = ?`;
 
     pool.query(query, [email], (err, result) => {
