@@ -1573,7 +1573,7 @@ EXAMPLE OPENING:
     const [enrolledCourses, setEnrolledCourses] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [showUnenrollModal, setShowUnenrollModal] = React.useState(false);
-    const [unenrollCourse, setUnenrollCourse] = React.useState<{id: string, title: string} | null>(null);
+    const [unenrollCourse, setUnenrollCourse] = React.useState<{ id: string, title: string } | null>(null);
     const [unenrollInput, setUnenrollInput] = React.useState('');
     const [unenrollError, setUnenrollError] = React.useState('');
 
@@ -1631,7 +1631,7 @@ EXAMPLE OPENING:
         setUnenrollCourse(null);
         setUnenrollInput('');
         fetchEnrolledCourses();
-        
+
         // Show success notification
         alert('Successfully unenrolled from the course');
       } catch (error) {
@@ -1652,69 +1652,39 @@ EXAMPLE OPENING:
     }, []);
 
     return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group border border-white/5">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl" />
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group border border-white/5">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex-1">
-            <span className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest mb-6 inline-block border border-white/10">Recommended for You</span>
-            <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">Master Job Interview Fluency with Daniel</h2>
-            <p className="text-indigo-200 text-lg mb-8 opacity-90 max-w-lg leading-relaxed">
-              "Daniel will help you polish your professional English. Practice common interview questions and get real-time corrections."
-            </p>
-            <button
-              onClick={() => startRoleplay(PERSONAS[1])}
-              className="px-8 py-4 bg-white text-indigo-950 rounded-2xl font-bold text-lg shadow-xl shadow-black/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2 group/btn"
-            >
-              Start Session Now <Play size={20} fill="currentColor" className="group-hover/btn:translate-x-1 transition-transform" />
-            </button>
-          </div>
-          <div className="hidden lg:flex w-64 h-64 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-sm group-hover:scale-110 transition-transform duration-700 relative shadow-2xl shadow-black/20">
-            <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl" />
-            <User size={100} className="text-white/80 relative z-10" strokeWidth={1.5} />
-          </div>
-        </div>
-      </div>
-
-      {/* My Enrolled Courses Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-black text-foreground">📚 My Courses</h2>
-            <p className="text-muted-foreground font-medium">Continue your learning journey</p>
-          </div>
-          <button 
-            onClick={() => {
-              navigate('/');
-              setTimeout(() => {
-                const coursesSection = document.getElementById('courses');
-                if (coursesSection) {
-                  coursesSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }, 100);
-            }}
-            className="px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
-          >
-            Browse All Courses →
-          </button>
-        </div>
-
-        {isLoading ? (
-          <div className="bg-card rounded-2xl border border-border p-16 text-center">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading your courses...</p>
-          </div>
-        ) : enrolledCourses.length === 0 ? (
-          <div className="bg-card rounded-2xl border border-border p-16 text-center">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <BookOpen size={40} className="text-primary" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+            <div className="flex-1">
+              <span className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest mb-6 inline-block border border-white/10">Recommended for You</span>
+              <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">Master Job Interview Fluency with Daniel</h2>
+              <p className="text-indigo-200 text-lg mb-8 opacity-90 max-w-lg leading-relaxed">
+                "Daniel will help you polish your professional English. Practice common interview questions and get real-time corrections."
+              </p>
+              <button
+                onClick={() => startRoleplay(PERSONAS[1])}
+                className="px-8 py-4 bg-white text-indigo-950 rounded-2xl font-bold text-lg shadow-xl shadow-black/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2 group/btn"
+              >
+                Start Session Now <Play size={20} fill="currentColor" className="group-hover/btn:translate-x-1 transition-transform" />
+              </button>
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-3">No Courses Yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Start your learning journey by enrolling in courses that match your goals.
-            </p>
+            <div className="hidden lg:flex w-64 h-64 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-sm group-hover:scale-110 transition-transform duration-700 relative shadow-2xl shadow-black/20">
+              <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl" />
+              <User size={100} className="text-white/80 relative z-10" strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+
+        {/* My Enrolled Courses Section */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-black text-foreground">📚 My Courses</h2>
+              <p className="text-muted-foreground font-medium">Continue your learning journey</p>
+            </div>
             <button
               onClick={() => {
                 navigate('/');
@@ -1725,204 +1695,234 @@ EXAMPLE OPENING:
                   }
                 }, 100);
               }}
-              className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2"
+              className="px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
             >
-              Explore Courses
-              <ChevronRight size={20} />
+              Browse All Courses →
             </button>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {enrolledCourses.map((course) => (
-              <div key={course.id} className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2">
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={course.course_thumbnail}
-                    alt={course.course_title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-lg">
-                    {course.course_level}
-                  </div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="w-full bg-white/20 backdrop-blur-sm h-2 rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-white rounded-full shadow-lg" style={{ width: `${course.progress || 0}%` }} />
-                    </div>
-                    <p className="text-white text-xs font-bold">
-                      {course.progress || 0}% Complete • {course.completed_lessons || 0}/{course.course_lessons} lessons
-                    </p>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
-                    {course.course_category}
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                    {course.course_title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {course.course_description}
-                  </p>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {course.course_instructor?.charAt(0) || 'I'}
-                    </div>
-                    <span className="text-sm text-muted-foreground">{course.course_instructor}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => navigate('/dashboard/learn')}
-                      className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
-                    >
-                      Continue Learning
-                      <Play size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleUnenroll(course.course_id, course.course_title)}
-                      className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all"
-                      title="Unenroll from course"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
+
+          {isLoading ? (
+            <div className="bg-card rounded-2xl border border-border p-16 text-center">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading your courses...</p>
+            </div>
+          ) : enrolledCourses.length === 0 ? (
+            <div className="bg-card rounded-2xl border border-border p-16 text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <BookOpen size={40} className="text-primary" />
               </div>
-            ))}
+              <h3 className="text-2xl font-bold text-foreground mb-3">No Courses Yet</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Start your learning journey by enrolling in courses that match your goals.
+              </p>
+              <button
+                onClick={() => {
+                  navigate('/');
+                  setTimeout(() => {
+                    const coursesSection = document.getElementById('courses');
+                    if (coursesSection) {
+                      coursesSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }}
+                className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2"
+              >
+                Explore Courses
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {enrolledCourses.map((course) => (
+                <div key={course.id} className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2">
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={course.course_thumbnail}
+                      alt={course.course_title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-lg">
+                      {course.course_level}
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="w-full bg-white/20 backdrop-blur-sm h-2 rounded-full overflow-hidden mb-2">
+                        <div className="h-full bg-white rounded-full shadow-lg" style={{ width: `${course.progress || 0}%` }} />
+                      </div>
+                      <p className="text-white text-xs font-bold">
+                        {course.progress || 0}% Complete • {course.completed_lessons || 0}/{course.course_lessons} lessons
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                      {course.course_category}
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {course.course_title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {course.course_description}
+                    </p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        {course.course_instructor?.charAt(0) || 'I'}
+                      </div>
+                      <span className="text-sm text-muted-foreground">{course.course_instructor}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate('/dashboard/learn')}
+                        className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                      >
+                        Continue Learning
+                        <Play size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleUnenroll(course.course_id, course.course_title)}
+                        className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all"
+                        title="Unenroll from course"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-blue-500/20 transition-colors group">
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <BookOpen size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Continue Lesson</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Grammar: Mastering Tenses for Daily Conversation</p>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-blue-500 rounded-full" style={{ width: '45%' }} />
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/learn')}
+              className="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+            >
+              Resume <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-purple-500/20 transition-colors group">
+            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Award size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Level Up!</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Earn 250 XP more to reach <strong className="text-slate-900 dark:text-white">Level 5: Intermediate Pro</strong></p>
+            <div className="flex -space-x-3 mb-4">
+              {[1, 2, 3, 4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm">A{i}</div>)}
+              <div className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">+12</div>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/progress')}
+              className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+            >
+              View Leaderboard <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-orange-500/20 transition-colors group">
+            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Calendar size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Daily Goal</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Complete one 10-minute voice session to maintain your streak.</p>
+            <div className="flex gap-2 mb-4">
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                <div key={i} className={`flex-1 aspect-square rounded-lg flex items-center justify-center font-bold text-xs ${i < 4 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                  {d}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/profile')}
+              className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+            >
+              Set Reminders <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Professional Unenroll Confirmation Modal */}
+        {showUnenrollModal && unenrollCourse && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center">
+                  <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">Confirm Unenrollment</h3>
+              </div>
+
+              <p className="text-muted-foreground mb-2">
+                You are about to unenroll from:
+              </p>
+              <p className="text-lg font-bold text-foreground mb-6">
+                "{unenrollCourse.title}"
+              </p>
+
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 mb-6">
+                <p className="text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                  <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                  <span>Your progress will be permanently deleted. Type <strong>"unenrolled"</strong> to confirm.</span>
+                </p>
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <label className="block text-sm font-bold text-foreground mb-2">
+                  Type "unenrolled" to confirm
+                </label>
+                <input
+                  type="text"
+                  value={unenrollInput}
+                  onChange={(e) => {
+                    setUnenrollInput(e.target.value);
+                    setUnenrollError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') confirmUnenroll();
+                    if (e.key === 'Escape') cancelUnenroll();
+                  }}
+                  placeholder="Type here..."
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:border-primary focus:outline-none text-foreground font-medium"
+                  autoFocus
+                />
+                {unenrollError && (
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    {unenrollError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelUnenroll}
+                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-foreground rounded-xl font-bold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmUnenroll}
+                  disabled={unenrollInput.toLowerCase() !== 'unenrolled'}
+                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:shadow-none"
+                >
+                  Unenroll
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-blue-500/20 transition-colors group">
-          <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <BookOpen size={24} />
-          </div>
-          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Continue Lesson</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Grammar: Mastering Tenses for Daily Conversation</p>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-blue-500 rounded-full" style={{ width: '45%' }} />
-          </div>
-          <button
-            onClick={() => navigate('/dashboard/learn')}
-            className="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-          >
-            Resume <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-purple-500/20 transition-colors group">
-          <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <Award size={24} />
-          </div>
-          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Level Up!</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Earn 250 XP more to reach <strong className="text-slate-900 dark:text-white">Level 5: Intermediate Pro</strong></p>
-          <div className="flex -space-x-3 mb-4">
-            {[1, 2, 3, 4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm">A{i}</div>)}
-            <div className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">+12</div>
-          </div>
-          <button
-            onClick={() => navigate('/dashboard/progress')}
-            className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-          >
-            View Leaderboard <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-orange-500/20 transition-colors group">
-          <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <Calendar size={24} />
-          </div>
-          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Daily Goal</h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Complete one 10-minute voice session to maintain your streak.</p>
-          <div className="flex gap-2 mb-4">
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <div key={i} className={`flex-1 aspect-square rounded-lg flex items-center justify-center font-bold text-xs ${i < 4 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                {d}
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => navigate('/profile')}
-            className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-          >
-            Set Reminders <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Professional Unenroll Confirmation Modal */}
-      {showUnenrollModal && unenrollCourse && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center">
-                <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-foreground">Confirm Unenrollment</h3>
-            </div>
-            
-            <p className="text-muted-foreground mb-2">
-              You are about to unenroll from:
-            </p>
-            <p className="text-lg font-bold text-foreground mb-6">
-              "{unenrollCourse.title}"
-            </p>
-            
-            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 mb-6">
-              <p className="text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
-                <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-                <span>Your progress will be permanently deleted. Type <strong>"unenrolled"</strong> to confirm.</span>
-              </p>
-            </div>
-
-            <div className="space-y-2 mb-6">
-              <label className="block text-sm font-bold text-foreground mb-2">
-                Type "unenrolled" to confirm
-              </label>
-              <input
-                type="text"
-                value={unenrollInput}
-                onChange={(e) => {
-                  setUnenrollInput(e.target.value);
-                  setUnenrollError('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') confirmUnenroll();
-                  if (e.key === 'Escape') cancelUnenroll();
-                }}
-                placeholder="Type here..."
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:border-primary focus:outline-none text-foreground font-medium"
-                autoFocus
-              />
-              {unenrollError && (
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <AlertCircle size={14} />
-                  {unenrollError}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={cancelUnenroll}
-                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-foreground rounded-xl font-bold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmUnenroll}
-                disabled={unenrollInput.toLowerCase() !== 'unenrolled'}
-                className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:shadow-none"
-              >
-                Unenroll
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
   };
 
   const LearnContent = () => {
@@ -2167,7 +2167,7 @@ EXAMPLE OPENING:
 
         <div className="bg-card p-10 rounded-[2.5rem] shadow-sm border border-border flex flex-col items-center">
           <h3 className="font-bold text-xl text-gray-800 mb-8 self-start">Proficiency Radar</h3>
-          <div className="flex-1 w-full flex items-center justify-center min-h-[300px]">
+          <div className="h-80 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
                 { subject: 'Grammar', A: 70 }, { subject: 'Vocabulary', A: 85 },
