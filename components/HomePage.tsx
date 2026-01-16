@@ -157,12 +157,22 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         const isLoggedIn = localStorage.getItem('myenglish_token') === 'logged_in';
         if (!isLoggedIn) {
             onGetStarted();
-            return;
         }
 
         const userEmail = localStorage.getItem('myenglish_userEmail');
-        if (!userEmail) {
-            alert('Please log in to enroll in courses');
+
+        // Check subscription status
+        const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+
+        const isPro = subStatus === 'pro';
+        const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+        const isUnlocked = isPro || isTrialActive;
+
+        // Restriction: Free users can ONLY enroll in 'English for Beginners'
+        if (!isUnlocked && course.title !== 'English for Beginners') {
+            alert("This is a Premium course. Please upgrade your plan to enroll.");
+            onGetStarted(); // Redirect to pricing/signup
             return;
         }
 

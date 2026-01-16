@@ -89,8 +89,8 @@ export function CourseDetailPage() {
 
         if (!course) return;
 
-        // Check if premium course requires unlock
-        if (Number(course.price) > 0 && !isUnlocked) {
+        // Restrict free users to only "English for Beginners"
+        if (!isUnlocked && course.title !== 'English for Beginners') {
             alert("This is a Premium course. Please upgrade your plan to enroll.");
             navigate('/pricing');
             return;
@@ -164,6 +164,14 @@ export function CourseDetailPage() {
     };
 
     const startLesson = (lessonId: string) => {
+        // Strictly block premium content for non-Pro users
+        if (!isUnlocked && course?.title !== 'English for Beginners') {
+            alert("This is a Premium course. Please upgrade to Pro to access this content.");
+            navigate('/pricing');
+            return;
+        }
+
+        // General enrollment check
         if (!isEnrolled && !isUnlocked) {
             alert("Please enroll in this course or upgrade to access the lessons.");
             return;
