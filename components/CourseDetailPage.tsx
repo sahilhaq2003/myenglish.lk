@@ -246,12 +246,21 @@ export function CourseDetailPage() {
                             </p>
 
                             {!isEnrolled && !checkingEnrollment && (
-                                <button
-                                    onClick={handleEnroll}
-                                    className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-50 transition-all flex items-center gap-2 mb-8"
-                                >
-                                    {Number(course.price) > 0 && !isUnlocked ? "Unlock Premium" : "Enroll Now"} <ArrowLeft className="rotate-180" size={20} />
-                                </button>
+                                !isUnlocked && course.title !== 'English for Beginners' ? (
+                                    <button
+                                        onClick={() => navigate('/pricing')}
+                                        className="px-8 py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-all flex items-center gap-2 mb-8"
+                                    >
+                                        Unlock Premium <ArrowLeft className="rotate-180" size={20} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleEnroll}
+                                        className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-50 transition-all flex items-center gap-2 mb-8"
+                                    >
+                                        Enroll Now <ArrowLeft className="rotate-180" size={20} />
+                                    </button>
+                                )
                             )}
 
                             {/* Progress Bar */}

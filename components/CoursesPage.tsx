@@ -325,7 +325,7 @@ export function CoursesPage() {
                                             ) : (
                                                 <div className="space-y-3">
                                                     <button
-                                                        onClick={() => handleEnroll(course)}
+                                                        onClick={() => isLocked(course) ? navigate('/pricing') : handleEnroll(course)}
                                                         className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${isLocked(course)
                                                             ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-orange-500/25'
                                                             : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
