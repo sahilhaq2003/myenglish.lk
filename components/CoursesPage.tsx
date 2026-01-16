@@ -85,7 +85,7 @@ export function CoursesPage() {
     };
 
     // Check subscription status
-    const subStatus = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
     const trialEnd = localStorage.getItem('myenglish_trialEndAt');
 
     const isPro = subStatus === 'pro';
@@ -96,7 +96,7 @@ export function CoursesPage() {
         // If unlocked, not locked.
         if (isUnlocked) return false;
         // If English for Beginners, not locked.
-        if (course.title === 'English for Beginners' || course.id === '5' || course.id === 'course_conversational_beginners') return false;
+        if (course.title === 'English for Beginners') return false;
         // Otherwise, locked.
         return true;
     };
@@ -137,13 +137,6 @@ export function CoursesPage() {
 
             if (response.status === 409) {
                 alert('You are already enrolled in this course!');
-                return;
-            }
-
-            if (response.status === 403) {
-                const data = await response.json();
-                alert(data.message || 'This is a Premium course. Please upgrade your plan to enroll.');
-                navigate('/pricing');
                 return;
             }
 

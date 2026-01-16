@@ -522,18 +522,14 @@ app.post('/api/enrollments', (req, res) => {
         }
 
         const user = results[0];
-        const status = (user.subscription_status || '').toLowerCase();
-        const isPro = status === 'pro';
-        const isTrial = status === 'trial' && user.trial_end_at && new Date() < new Date(user.trial_end_at);
+        const isPro = user.subscription_status === 'pro';
+        const isTrial = user.subscription_status === 'trial' && user.trial_end_at && new Date() < new Date(user.trial_end_at);
         const isUnlocked = isPro || isTrial;
 
         // Strict restriction: Free users can ONLY enroll in 'English for Beginners'
-        // Check by course title and IDs case-insensitively
-        const targetTitle = (courseTitle || '').trim().toLowerCase();
-        const isFreeOnlyCourse = targetTitle === 'english for beginners' ||
-            courseId === '5' ||
-            courseId === 'course_conversational_beginners';
-
+        // Check by course title (primary) and known free course IDs
+        const isFreeOnlyCourse = courseTitle === 'English for Beginners';
+        
         // All other courses require pro/trial subscription
         if (!isUnlocked && !isFreeOnlyCourse) {
             console.log('Blocked enrollment for free user:', userEmail, 'Course:', courseTitle, 'ID:', courseId);

@@ -53,8 +53,7 @@ export function CourseDetailPage() {
         }
 
         // Check subscription status
-        // Check subscription status
-        const status = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
+        const status = localStorage.getItem('myenglish_subscriptionStatus');
         const trialEnd = localStorage.getItem('myenglish_trialEndAt');
 
         let unlocked = false;
@@ -115,25 +114,11 @@ export function CourseDetailPage() {
                 })
             });
 
-            if (response.status === 403) {
-                const data = await response.json();
-                alert(data.message || 'This is a Premium course. Please upgrade your plan to enroll.');
-                navigate('/pricing');
-                return;
-            }
-
-            if (response.status === 409) {
-                alert('You are already enrolled in this course!');
-                setIsEnrolled(true);
-                return;
-            }
-
             if (response.ok) {
                 setIsEnrolled(true);
                 alert(`Successfully enrolled in "${course.title}"!`);
             } else {
-                const data = await response.json();
-                throw new Error(data.message || 'Enrollment failed');
+                throw new Error('Enrollment failed');
             }
         } catch (error) {
             console.error('Error enrolling:', error);
