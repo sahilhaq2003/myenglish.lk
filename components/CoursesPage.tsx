@@ -85,7 +85,7 @@ export function CoursesPage() {
     };
 
     // Check subscription status
-    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const subStatus = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
     const trialEnd = localStorage.getItem('myenglish_trialEndAt');
 
     const isPro = subStatus === 'pro';
@@ -96,7 +96,7 @@ export function CoursesPage() {
         // If unlocked, not locked.
         if (isUnlocked) return false;
         // If English for Beginners, not locked.
-        if (course.title === 'English for Beginners') return false;
+        if (course.title === 'English for Beginners' || course.id === '5' || course.id === 'course_conversational_beginners') return false;
         // Otherwise, locked.
         return true;
     };

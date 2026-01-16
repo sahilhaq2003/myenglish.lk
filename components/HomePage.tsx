@@ -153,7 +153,8 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
     });
 
     // Check subscription status (moved to top level for UI)
-    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    // Check subscription status (moved to top level for UI)
+    const subStatus = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
     const trialEnd = localStorage.getItem('myenglish_trialEndAt');
     const isPro = subStatus === 'pro';
     const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);

@@ -84,7 +84,7 @@ export function LessonPlayerPage() {
     useEffect(() => {
         if (!lesson) return;
 
-        const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+        const subStatus = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
         const trialEnd = localStorage.getItem('myenglish_trialEndAt');
         const isPro = subStatus === 'pro';
         const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);

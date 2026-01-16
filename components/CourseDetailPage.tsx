@@ -53,7 +53,8 @@ export function CourseDetailPage() {
         }
 
         // Check subscription status
-        const status = localStorage.getItem('myenglish_subscriptionStatus');
+        // Check subscription status
+        const status = (localStorage.getItem('myenglish_subscriptionStatus') || '').toLowerCase();
         const trialEnd = localStorage.getItem('myenglish_trialEndAt');
 
         let unlocked = false;
