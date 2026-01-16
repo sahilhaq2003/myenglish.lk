@@ -84,9 +84,36 @@ export function CoursesPage() {
         }
     };
 
+    // Check subscription status
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+
+    const isPro = subStatus === 'pro';
+    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+    const isUnlocked = isPro || isTrialActive;
+
+    const isLocked = (course: Course) => {
+        // If unlocked, not locked.
+        if (isUnlocked) return false;
+        // If English for Beginners, not locked.
+        if (course.title === 'English for Beginners') return false;
+        // Otherwise, locked.
+        return true;
+    };
+
     const handleEnroll = async (course: Course) => {
         if (!userEmail) {
             navigate('/login');
+            return;
+        }
+
+        // Ensure price is treated as a number
+        const price = Number(course.price);
+
+        // Restriction: Free users can ONLY enroll in 'English for Beginners'
+        if (!isUnlocked && course.title !== 'English for Beginners') {
+            alert("This is a Premium course. Please upgrade your plan to enroll.");
+            navigate('/pricing');
             return;
         }
 
@@ -298,11 +325,16 @@ export function CoursesPage() {
                                             ) : (
                                                 <div className="space-y-3">
                                                     <button
-                                                        onClick={() => handleEnroll(course)}
-                                                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:-translate-y-0.5 active:scale-95 group-hover:bg-indigo-700"
+                                                        onClick={() => isLocked(course) ? navigate('/pricing') : handleEnroll(course)}
+                                                        className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${isLocked(course)
+                                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-orange-500/25'
+                                                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
+                                                            }`}
                                                     >
-                                                        Enroll Now
-                                                        <Play size={18} className="fill-current" />
+                                                        {isLocked(course)
+                                                            ? <><Sparkles size={18} fill="currentColor" /> Unlock Premium</>
+                                                            : <><Play size={18} className="fill-current" /> Enroll Now</>
+                                                        }
                                                     </button>
                                                     <button
                                                         onClick={() => navigate(`/learning/course/${course.id}`)}

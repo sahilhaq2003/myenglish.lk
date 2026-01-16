@@ -12,14 +12,6 @@ import { SignupPage } from './components/SignupPage';
 import { CoursesPage } from './components/CoursesPage';
 import { PricingPage } from './components/PricingPage';
 import { ProfilePage } from './components/ProfilePage';
-import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
-import { TermsOfServicePage } from './components/TermsOfServicePage';
-import { CookiePolicyPage } from './components/CookiePolicyPage';
-import { CourseDetailPage } from './components/CourseDetailPage';
-import { LessonPlayerPage } from './components/LessonPlayerPage';
-import { LearningProgressPage } from './components/LearningProgressPage';
-import ScrollToTop from './components/ScrollToTop';
-
 
 import { decode, decodeAudioData, createBlob } from './utils/audio';
 import { getLessonContent, LessonContent } from './lessons';
@@ -239,22 +231,17 @@ const App: React.FC = () => {
     return saved === 'true';
   });
   const [currentLesson, setCurrentLesson] = useState<any>(null);
-  const [practiceAnswers, setPracticeAnswers] = useState<{ [key: number]: string }>({});
+  const [practiceAnswers, setPracticeAnswers] = useState<Record<number, string>>({});
   const [showPracticeResults, setShowPracticeResults] = useState(false);
-
-  // Progress tracking for AI Lesson
-  const [sessionProgress, setSessionProgress] = useState(0); // 0 to 100%
-  const [isCompletionEnabled, setIsCompletionEnabled] = useState(false);
-  const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- User Profile State ---
   const [userName, setUserName] = useState(() => {
     const saved = localStorage.getItem('myenglish_userName');
-    return saved || '';
+    return saved || 'Sarah Johnson';
   });
   const [userEmail, setUserEmail] = useState(() => {
     const saved = localStorage.getItem('myenglish_userEmail');
-    return saved || '';
+    return saved || 'sarah.j@example.com';
   });
   const [learningGoal, setLearningGoal] = useState(() => {
     const saved = localStorage.getItem('myenglish_learningGoal');
@@ -335,14 +322,6 @@ const App: React.FC = () => {
     localStorage.setItem('myenglish_notificationsEnabled', notificationsEnabled.toString());
   }, [notificationsEnabled]);
 
-  // Debug: Track modal visibility
-  useEffect(() => {
-    console.log('📺 Modal visibility changed:', showModuleSession ? 'VISIBLE' : 'HIDDEN');
-    if (showModuleSession && currentModule) {
-      console.log('📚 Current module:', currentModule.title);
-    }
-  }, [showModuleSession, currentModule]);
-
   // --- Logout Function ---
   const handleLogout = () => {
     // Clear all localStorage data
@@ -368,7 +347,6 @@ const App: React.FC = () => {
   const sessionRef = useRef<any>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
   const isAiSpeakingRef = useRef(false);
-  const isClosingSessionRef = useRef(false); // Flag to prevent audio sends during shutdown
   const transcriptionContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Initialization & API Key Guard ---
@@ -396,44 +374,20 @@ const App: React.FC = () => {
   };
 
   const stopAudio = () => {
-    console.log('🛑 Stopping audio and closing session...');
-    // Set closing flag FIRST to prevent any new sends
-    isClosingSessionRef.current = true;
-
-    // Disconnect audio processor immediately
     if (scriptProcessorRef.current) {
-      scriptProcessorRef.current.onaudioprocess = null; // Stop processing events immediately
-      try {
-        scriptProcessorRef.current.disconnect();
-      } catch (e) { /* Already disconnected */ }
+      scriptProcessorRef.current.disconnect();
       scriptProcessorRef.current = null;
     }
-
-    // Stop all audio playback
     for (const source of sourcesRef.current) {
       try { source.stop(); } catch (e) { }
     }
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
     setIsLive(false);
-
-    // Close session immediately (no delay to prevent race conditions)
     if (sessionRef.current) {
-      const sessionToClose = sessionRef.current;
-      sessionRef.current = null; // Clear reference immediately
-
-      try {
-        console.log('🔒 Closing old session');
-        sessionToClose.close();
-      } catch (e) {
-        console.log('⚠️ Session already closed');
-      }
-      // Reset closing flag immediately
-      isClosingSessionRef.current = false;
-    } else {
-      isClosingSessionRef.current = false;
+      try { sessionRef.current.close(); } catch (e) { }
+      sessionRef.current = null;
     }
-
     setConnectionError(null);
   };
 
@@ -482,24 +436,17 @@ const App: React.FC = () => {
 
           const inputData = e.inputBuffer.getChannelData(0);
           const pcmBlob = createBlob(inputData);
-          // Check closing flag before attempting to get session
-          if (isClosingSessionRef.current) return;
-
           getSessionPromise().then(session => {
-            // Double-check closing flag and session validity
-            if (isClosingSessionRef.current || !session || !scriptProcessorRef.current || sessionRef.current !== session) {
-              return;
-            }
-
-            try {
-              // Attempt to send audio data
-              const result = session.sendRealtimeInput({ media: pcmBlob });
-              // Handle if it returns a promise (async vs sync)
-              if (result && typeof result.catch === 'function') {
-                result.catch((e: any) => { /* Ignore pending promise rejections on close */ });
+            // Check carefully if session is open before sending
+            if (session && scriptProcessorRef.current) {
+              try {
+                // Only send if not closed
+                if (!session.closed) { // Hypothetical property, but try/catch catches it mostly
+                  session.sendRealtimeInput({ media: pcmBlob });
+                }
+              } catch (e) {
+                // Debug log only, suppress spam
               }
-            } catch (e: any) {
-              // Ignore synchronous errors (session might have closed between checks)
             }
           }).catch(err => {
             // Ignore session not ready errors in loop
@@ -524,8 +471,7 @@ const App: React.FC = () => {
       // Transcriptions
       if (msg.serverContent?.outputTranscription) {
         // Direct append, let the UI handle wrapping. API sends partial chunks.
-        // Increased buffer size to ensure users see full sentences/history during the lesson
-        setOutputTranscription(prev => (prev + msg.serverContent!.outputTranscription!.text).slice(-10000));
+        setOutputTranscription(prev => (prev + msg.serverContent!.outputTranscription!.text).slice(-2000));
       }
       if (msg.serverContent?.inputTranscription) {
         const incoming = msg.serverContent!.inputTranscription!.text;
@@ -536,13 +482,12 @@ const App: React.FC = () => {
         }
       }
 
-      // Interruption - DISABLED per user request ("do not stop AI")
+      // Interruption
       if (msg.serverContent?.interrupted) {
-        // isAiSpeakingRef.current = false; // Reset on interruption
-        // for (const source of sourcesRef.current) try { source.stop(); } catch (e) { }
-        // sourcesRef.current.clear();
-        // nextStartTimeRef.current = 0;
-        console.log("Interruption ignored - continuing playback.");
+        isAiSpeakingRef.current = false; // Reset on interruption
+        for (const source of sourcesRef.current) try { source.stop(); } catch (e) { }
+        sourcesRef.current.clear();
+        nextStartTimeRef.current = 0;
       }
 
       // Turn Complete
@@ -587,18 +532,11 @@ const App: React.FC = () => {
   // --- Logic Flows ---
 
   const startAssessment = async () => {
-    // Skip assessment questions and go straight to default learning path
-    setUserLevel(DEFAULT_LEARNING_PATH.level);
-    setLearningPath(DEFAULT_LEARNING_PATH);
-    setPhase(AppPhase.PATH); // Go to Roadmap/Dashboard directly
-    navigate('/roadmap');
-
-    // Original behavior commented out:
-    // await ensureApiKey();
-    // await initAudio();
-    // setPhase(AppPhase.ASSESSMENT);
-    // setCurrentQuestionIndex(0);
-    // connectSession(AppPhase.ASSESSMENT, 0);
+    await ensureApiKey();
+    await initAudio();
+    setPhase(AppPhase.ASSESSMENT);
+    setCurrentQuestionIndex(0);
+    connectSession(AppPhase.ASSESSMENT, 0);
   };
 
   const connectSession = async (currentPhase: AppPhase, qIdx: number = 0, persona?: AIPersona) => {
@@ -770,47 +708,11 @@ const App: React.FC = () => {
     setPhase(AppPhase.LEARNING_SESSION);
     setOutputTranscription('');
     setInputTranscription('');
-    navigate('/learning-session'); // Navigate to the learning session page
     connectSession(AppPhase.LEARNING_SESSION, 0, persona);
   };
 
-  const startModuleLearning = async (baseModule: Module, specificLesson?: any) => {
-    // If specific lesson is provided, use its details for the AI context
-    const module = specificLesson ? { ...baseModule, ...specificLesson } : baseModule;
-
-    console.log('🎓 Starting module learning:', module.title, specificLesson ? `(Specific Lesson)` : '');
-    stopAudio(); // Ensure any previous session is cleaned up
+  const startModuleLearning = async (module: Module) => {
     setCurrentModule(module);
-    if (specificLesson) setCurrentLesson(specificLesson);
-
-    // Reset progress tracking
-    setSessionProgress(0);
-    setIsCompletionEnabled(false);
-
-    // Define lesson duration in seconds. 
-    // Use specificLesson?.estimated_minutes if available, else default to 5 minutes (300s) for "50% active" calculation.
-    // 50% of 5 mins = 2.5 mins. For testing/demo, we'll keep it short or meaningful.
-    // Let's use 2 minutes (120s) as a baseline for "active" session if undefined.
-    const durationSeconds = (specificLesson?.estimated_minutes || 2) * 60;
-    const thresholdSeconds = durationSeconds * 0.5; // 50%
-
-    // Start tracking time
-    let secondsElapsed = 0;
-    if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
-
-    sessionTimerRef.current = setInterval(() => {
-      secondsElapsed += 1;
-      // Update progress bar visual (capped at 100)
-      const progress = Math.min(100, (secondsElapsed / durationSeconds) * 100);
-      setSessionProgress(progress);
-
-      // Enable completion after 50% time
-      if (secondsElapsed >= thresholdSeconds) {
-        setIsCompletionEnabled(true);
-      }
-    }, 1000);
-
-    console.log('✅ Set current module and showing modal');
     setShowModuleSession(true);
     setOutputTranscription('');
     setInputTranscription('');
@@ -827,12 +729,11 @@ const App: React.FC = () => {
       moduleInstruction += `\n
 GRAMMAR TEACHER PERSONA: You are Professor Alex, a friendly and patient grammar expert who makes complex rules simple and fun.
 
-⚠️ CRITICAL INSTRUCTION: TEACH THE SPECIFIC TOPIC "${module.title}"!
-- You must strictly stick to the topic "${module.title}". Do not wander to general English.
-- As soon as the session begins, introduce yourself and START the lesson on this specific topic.
-- DO NOT wait for the student to speak first.
-- Begin with your greeting and immediately start explaining the topic.
-- Keep the conversation flowing - you are the teacher leading the lesson.
+⚠️ CRITICAL INSTRUCTION: START TEACHING IMMEDIATELY!
+- As soon as the session begins, introduce yourself and START the lesson
+- DO NOT wait for the student to speak first
+- Begin with your greeting and immediately start explaining the topic
+- Keep the conversation flowing - you are the teacher leading the lesson
 
 TEACHING STYLE:
 - Speak warmly and encouragingly, like a supportive mentor
@@ -842,7 +743,6 @@ TEACHING STYLE:
 - Use humor when appropriate to make learning enjoyable
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: BASE YOUR TEACHING STRICTLY ON THE ABOVE CONTENT.` : ''}
 
 TEACHING SEQUENCE (FOLLOW THIS EXACTLY):
 1. WARM GREETING: Start immediately with a friendly welcome
@@ -929,7 +829,6 @@ TEACHING STYLE:
 - Connect words to students' lives and interests
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: TEACH THE VOCABULARY WORDS FROM THE CONTENT ABOVE.` : ''}
 
 TEACHING SEQUENCE:
 1. EXCITING INTRODUCTION:
@@ -999,7 +898,6 @@ TEACHING STYLE:
 - Build speaking stamina gradually
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: USE THE CONTENT TO GUIDE THE SPEAKING PRACTICE.` : ''}
 
 COACHING SEQUENCE:
 1. MOTIVATING WELCOME:
@@ -1087,7 +985,6 @@ TEACHING STYLE:
 - Make listening active, not passive
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: USE THIS CONTENT FOR THE LISTENING EXERCISE.` : ''}
 
 TEACHING SEQUENCE:
 1. WELCOMING INTRODUCTION:
@@ -1183,7 +1080,6 @@ TEACHING STYLE:
 - Encourage active reading
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: READ AND DISCUSS THIS SPECIFIC TEXT.` : ''}
 
 TEACHING SEQUENCE:
 1. ENGAGING INTRODUCTION:
@@ -1286,7 +1182,6 @@ TEACHING STYLE:
 - Build confidence in written communication
 
 LESSON: "${module.title}" at ${module.level} level
-${module.content_text ? `\nLESSON CONTENT:\n${module.content_text}\n\nINSTRUCTION: GUIDE THE WRITING TASK BASED ON THIS CONTENT.` : ''}
 
 TEACHING SEQUENCE:
 1. INSPIRING WELCOME:
@@ -1389,12 +1284,10 @@ EXAMPLE OPENING:
     console.log("Debug: API Key loaded:", apiKey ? "Yes (Length: " + apiKey.length + ")" : "No");
 
     if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
-      console.error('❌ API Key not configured');
       setConnectionError('API key not configured. Please set VITE_API_KEY in your .env file. Get your key from https://aistudio.google.com/apikey');
       setShowModuleSession(false);
       return;
     }
-    console.log('🔑 API Key verified, starting AI session...');
 
     const ai = new GoogleGenAI({ apiKey });
 
@@ -1418,10 +1311,9 @@ EXAMPLE OPENING:
         callbacks: createLiveCallbacks(() => sessionPromise)
       });
       sessionRef.current = await sessionPromise;
-      console.log('🎤 Session connected successfully!');
       setIsLive(true);
     } catch (e: any) {
-      console.error('❌ Module session error:', e);
+      console.error('Module session error:', e);
       const errorMessage = e?.message || 'Unable to start lesson. Please try again.';
       setConnectionError(errorMessage);
       setShowModuleSession(false);
@@ -1591,14 +1483,14 @@ EXAMPLE OPENING:
             >
               <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 flex items-center justify-center text-primary overflow-hidden group-hover:border-indigo-500 transition-colors">
                 <img
-                  src={localStorage.getItem('myenglish_avatarUrl') || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
+                  src={`https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground dark:text-white truncate group-hover:text-primary transition-colors">{userName || 'User'}</p>
-                <p className="text-xs text-muted-foreground dark:text-slate-500 truncate">{userEmail || 'Not set'}</p>
+                <p className="text-xs text-muted-foreground dark:text-slate-500 truncate">{userEmail || 'user@example.com'}</p>
               </div>
             </button>
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors font-medium hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl">
@@ -1620,13 +1512,20 @@ EXAMPLE OPENING:
 
           <div className="flex items-center gap-6">
             <ThemeToggle />
-
+            <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-2xl border border-orange-100 dark:border-orange-500/20 hidden sm:flex">
+              <Flame size={20} fill="currentColor" />
+              <span className="font-black">{streak} DAY STREAK</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded-2xl border border-yellow-100 dark:border-yellow-500/20 hidden sm:flex">
+              <Award size={20} fill="currentColor" />
+              <span className="font-black">{points} XP</span>
+            </div>
             <button
               onClick={() => navigate('/profile')}
               className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 flex items-center justify-center text-primary overflow-hidden hover:border-indigo-500 transition-all"
             >
               <img
-                src={localStorage.getItem('myenglish_avatarUrl') || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
+                src={`https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -1674,7 +1573,7 @@ EXAMPLE OPENING:
     const [enrolledCourses, setEnrolledCourses] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [showUnenrollModal, setShowUnenrollModal] = React.useState(false);
-    const [unenrollCourse, setUnenrollCourse] = React.useState<{ id: string, title: string } | null>(null);
+    const [unenrollCourse, setUnenrollCourse] = React.useState<{id: string, title: string} | null>(null);
     const [unenrollInput, setUnenrollInput] = React.useState('');
     const [unenrollError, setUnenrollError] = React.useState('');
 
@@ -1686,7 +1585,7 @@ EXAMPLE OPENING:
       }
 
       try {
-        const response = await fetch(`/api/enrollments?email=${encodeURIComponent(userEmail)}`);
+        const response = await fetch(`http://localhost:3001/api/enrollments?email=${encodeURIComponent(userEmail)}`);
         if (!response.ok) {
           throw new Error('Failed to fetch enrolled courses');
         }
@@ -1716,7 +1615,7 @@ EXAMPLE OPENING:
       if (!userEmail || !unenrollCourse) return;
 
       try {
-        const response = await fetch(`/api/enrollments/${unenrollCourse.id}`, {
+        const response = await fetch(`http://localhost:3001/api/enrollments/${unenrollCourse.id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -1732,7 +1631,7 @@ EXAMPLE OPENING:
         setUnenrollCourse(null);
         setUnenrollInput('');
         fetchEnrolledCourses();
-
+        
         // Show success notification
         alert('Successfully unenrolled from the course');
       } catch (error) {
@@ -1750,274 +1649,280 @@ EXAMPLE OPENING:
 
     React.useEffect(() => {
       fetchEnrolledCourses();
-    }, [phase]); // Re-fetch when phase changes (e.g. returning to dashboard)
-
-    // Also fetch when userEmail changes (e.g., after login)
-    React.useEffect(() => {
-      const userEmail = localStorage.getItem('myenglish_userEmail');
-      if (userEmail) {
-        fetchEnrolledCourses();
-      }
-    }, [userEmail]); // Re-fetch when userEmail prop changes
+    }, []);
 
     return (
-      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group border border-white/5">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50" />
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl" />
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group border border-white/5">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-            <div className="flex-1">
-              <span className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest mb-6 inline-block border border-white/10">Recommended for You</span>
-              <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">Master Job Interview Fluency with Daniel</h2>
-              <p className="text-indigo-200 text-lg mb-8 opacity-90 max-w-lg leading-relaxed">
-                "Daniel will help you polish your professional English. Practice common interview questions and get real-time corrections."
-              </p>
-              <button
-                onClick={() => startRoleplay(PERSONAS[1])}
-                className="px-8 py-4 bg-white text-indigo-950 rounded-2xl font-bold text-lg shadow-xl shadow-black/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2 group/btn"
-              >
-                Start Session Now <Play size={20} fill="currentColor" className="group-hover/btn:translate-x-1 transition-transform" />
-              </button>
-            </div>
-            <div className="hidden lg:flex w-64 h-64 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-sm group-hover:scale-110 transition-transform duration-700 relative shadow-2xl shadow-black/20">
-              <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl" />
-              <User size={100} className="text-white/80 relative z-10" strokeWidth={1.5} />
-            </div>
-          </div>
-        </div>
-
-        {/* My Enrolled Courses Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-black text-foreground">My Courses</h2>
-              <p className="text-muted-foreground font-medium">Continue your learning journey</p>
-            </div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="flex-1">
+            <span className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full uppercase tracking-widest mb-6 inline-block border border-white/10">Recommended for You</span>
+            <h2 className="text-4xl font-black mb-4 leading-tight tracking-tight">Master Job Interview Fluency with Daniel</h2>
+            <p className="text-indigo-200 text-lg mb-8 opacity-90 max-w-lg leading-relaxed">
+              "Daniel will help you polish your professional English. Practice common interview questions and get real-time corrections."
+            </p>
             <button
-              onClick={() => navigate('/courses')}
-              className="px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+              onClick={() => startRoleplay(PERSONAS[1])}
+              className="px-8 py-4 bg-white text-indigo-950 rounded-2xl font-bold text-lg shadow-xl shadow-black/20 hover:scale-105 transition-all active:scale-95 flex items-center gap-2 group/btn"
             >
-              Browse All Courses →
+              Start Session Now <Play size={20} fill="currentColor" className="group-hover/btn:translate-x-1 transition-transform" />
             </button>
           </div>
+          <div className="hidden lg:flex w-64 h-64 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-sm group-hover:scale-110 transition-transform duration-700 relative shadow-2xl shadow-black/20">
+            <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl" />
+            <User size={100} className="text-white/80 relative z-10" strokeWidth={1.5} />
+          </div>
+        </div>
+      </div>
 
-          {isLoading ? (
-            <div className="bg-card rounded-2xl border border-border p-16 text-center">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading your courses...</p>
-            </div>
-          ) : enrolledCourses.length === 0 ? (
-            <div className="bg-card rounded-2xl border border-border p-16 text-center">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen size={40} className="text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold text-foreground mb-3">No Courses Yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Start your learning journey by enrolling in courses that match your goals.
-              </p>
-              <button
-                onClick={() => navigate('/courses')}
-                className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2"
-              >
-                Explore Courses
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCourses.map((course) => (
-                <div key={course.id} className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2">
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={course.course_thumbnail}
-                      alt={course.course_title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-lg">
-                      {course.course_level}
-                    </div>
+      {/* My Enrolled Courses Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-black text-foreground">📚 My Courses</h2>
+            <p className="text-muted-foreground font-medium">Continue your learning journey</p>
+          </div>
+          <button 
+            onClick={() => {
+              navigate('/');
+              setTimeout(() => {
+                const coursesSection = document.getElementById('courses');
+                if (coursesSection) {
+                  coursesSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }, 100);
+            }}
+            className="px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+          >
+            Browse All Courses →
+          </button>
+        </div>
 
+        {isLoading ? (
+          <div className="bg-card rounded-2xl border border-border p-16 text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading your courses...</p>
+          </div>
+        ) : enrolledCourses.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-16 text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <BookOpen size={40} className="text-primary" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground mb-3">No Courses Yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Start your learning journey by enrolling in courses that match your goals.
+            </p>
+            <button
+              onClick={() => {
+                navigate('/');
+                setTimeout(() => {
+                  const coursesSection = document.getElementById('courses');
+                  if (coursesSection) {
+                    coursesSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}
+              className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all inline-flex items-center gap-2"
+            >
+              Explore Courses
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {enrolledCourses.map((course) => (
+              <div key={course.id} className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2">
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={course.course_thumbnail}
+                    alt={course.course_title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-lg">
+                    {course.course_level}
                   </div>
-                  <div className="p-6">
-                    <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
-                      {course.course_category}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="w-full bg-white/20 backdrop-blur-sm h-2 rounded-full overflow-hidden mb-2">
+                      <div className="h-full bg-white rounded-full shadow-lg" style={{ width: `${course.progress || 0}%` }} />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {course.course_title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {course.course_description}
+                    <p className="text-white text-xs font-bold">
+                      {course.progress || 0}% Complete • {course.completed_lessons || 0}/{course.course_lessons} lessons
                     </p>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        {course.course_instructor?.charAt(0) || 'I'}
-                      </div>
-                      <span className="text-sm text-muted-foreground">{course.course_instructor}</span>
-                    </div>
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs font-bold text-foreground">{course.progress || 0}% Complete</span>
-                        <span className="text-xs text-muted-foreground">{course.completed_lessons || 0}/{course.course_lessons || 0} lessons</span>
-                      </div>
-                      <div className="w-full bg-secondary/30 h-2 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${course.progress || 0}%` }} />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => navigate(`/learning/course/${course.learning_course_id || course.course_id}`)}
-                        className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
-                      >
-                        Start Learning
-                        <Play size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleUnenroll(course.course_id, course.course_title)}
-                        className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all"
-                        title="Unenroll from course"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-blue-500/20 transition-colors group">
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <BookOpen size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Continue Lesson</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Grammar: Mastering Tenses for Daily Conversation</p>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
-              <div className="h-full bg-blue-500 rounded-full" style={{ width: '45%' }} />
-            </div>
-            <button
-              onClick={() => navigate('/dashboard/learn')}
-              className="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-            >
-              Resume <ChevronRight size={16} />
-            </button>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-purple-500/20 transition-colors group">
-            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Award size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Level Up!</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Earn 250 XP more to reach <strong className="text-slate-900 dark:text-white">Level 5: Intermediate Pro</strong></p>
-            <div className="flex -space-x-3 mb-4">
-              {[1, 2, 3, 4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm">A{i}</div>)}
-              <div className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">+12</div>
-            </div>
-            <button
-              onClick={() => navigate('/dashboard/progress')}
-              className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-            >
-              View Leaderboard <ChevronRight size={16} />
-            </button>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-orange-500/20 transition-colors group">
-            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Calendar size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Daily Goal</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Complete one 10-minute voice session to maintain your streak.</p>
-            <div className="flex gap-2 mb-4">
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-                <div key={i} className={`flex-1 aspect-square rounded-lg flex items-center justify-center font-bold text-xs ${i < 4 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                  {d}
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate('/profile')}
-              className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
-            >
-              Set Reminders <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Professional Unenroll Confirmation Modal */}
-        {showUnenrollModal && unenrollCourse && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center">
-                  <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground">Confirm Unenrollment</h3>
-              </div>
-
-              <p className="text-muted-foreground mb-2">
-                You are about to unenroll from:
-              </p>
-              <p className="text-lg font-bold text-foreground mb-6">
-                "{unenrollCourse.title}"
-              </p>
-
-              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 mb-6">
-                <p className="text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
-                  <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-                  <span>Your progress will be permanently deleted. Type <strong>"unenrolled"</strong> to confirm.</span>
-                </p>
-              </div>
-
-              <div className="space-y-2 mb-6">
-                <label className="block text-sm font-bold text-foreground mb-2">
-                  Type "unenrolled" to confirm
-                </label>
-                <input
-                  type="text"
-                  value={unenrollInput}
-                  onChange={(e) => {
-                    setUnenrollInput(e.target.value);
-                    setUnenrollError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') confirmUnenroll();
-                    if (e.key === 'Escape') cancelUnenroll();
-                  }}
-                  placeholder="Type here..."
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:border-primary focus:outline-none text-foreground font-medium"
-                  autoFocus
-                />
-                {unenrollError && (
-                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
-                    <AlertCircle size={14} />
-                    {unenrollError}
+                <div className="p-6">
+                  <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                    {course.course_category}
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    {course.course_title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {course.course_description}
                   </p>
-                )}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {course.course_instructor?.charAt(0) || 'I'}
+                    </div>
+                    <span className="text-sm text-muted-foreground">{course.course_instructor}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => navigate('/dashboard/learn')}
+                      className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      Continue Learning
+                      <Play size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleUnenroll(course.course_id, course.course_title)}
+                      className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-bold transition-all"
+                      title="Unenroll from course"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={cancelUnenroll}
-                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-foreground rounded-xl font-bold transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmUnenroll}
-                  disabled={unenrollInput.toLowerCase() !== 'unenrolled'}
-                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:shadow-none"
-                >
-                  Unenroll
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </div>
-    );
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-blue-500/20 transition-colors group">
+          <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <BookOpen size={24} />
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Continue Lesson</h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Grammar: Mastering Tenses for Daily Conversation</p>
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+            <div className="h-full bg-blue-500 rounded-full" style={{ width: '45%' }} />
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/learn')}
+            className="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+          >
+            Resume <ChevronRight size={16} />
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-purple-500/20 transition-colors group">
+          <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <Award size={24} />
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Level Up!</h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Earn 250 XP more to reach <strong className="text-slate-900 dark:text-white">Level 5: Intermediate Pro</strong></p>
+          <div className="flex -space-x-3 mb-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm">A{i}</div>)}
+            <div className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">+12</div>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/progress')}
+            className="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+          >
+            View Leaderboard <ChevronRight size={16} />
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-white/5 flex flex-col hover:border-orange-500/20 transition-colors group">
+          <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <Calendar size={24} />
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Daily Goal</h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 flex-1 text-sm leading-relaxed">Complete one 10-minute voice session to maintain your streak.</p>
+          <div className="flex gap-2 mb-4">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+              <div key={i} className={`flex-1 aspect-square rounded-lg flex items-center justify-center font-bold text-xs ${i < 4 ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                {d}
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-2 hover:gap-3 transition-all text-sm"
+          >
+            Set Reminders <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Professional Unenroll Confirmation Modal */}
+      {showUnenrollModal && unenrollCourse && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center">
+                <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground">Confirm Unenrollment</h3>
+            </div>
+            
+            <p className="text-muted-foreground mb-2">
+              You are about to unenroll from:
+            </p>
+            <p className="text-lg font-bold text-foreground mb-6">
+              "{unenrollCourse.title}"
+            </p>
+            
+            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 mb-6">
+              <p className="text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                <span>Your progress will be permanently deleted. Type <strong>"unenrolled"</strong> to confirm.</span>
+              </p>
+            </div>
+
+            <div className="space-y-2 mb-6">
+              <label className="block text-sm font-bold text-foreground mb-2">
+                Type "unenrolled" to confirm
+              </label>
+              <input
+                type="text"
+                value={unenrollInput}
+                onChange={(e) => {
+                  setUnenrollInput(e.target.value);
+                  setUnenrollError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirmUnenroll();
+                  if (e.key === 'Escape') cancelUnenroll();
+                }}
+                placeholder="Type here..."
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:border-primary focus:outline-none text-foreground font-medium"
+                autoFocus
+              />
+              {unenrollError && (
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <AlertCircle size={14} />
+                  {unenrollError}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={cancelUnenroll}
+                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-foreground rounded-xl font-bold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmUnenroll}
+                disabled={unenrollInput.toLowerCase() !== 'unenrolled'}
+                className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-600/20 disabled:shadow-none"
+              >
+                Unenroll
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
   };
 
   const LearnContent = () => {
@@ -2289,11 +2194,7 @@ EXAMPLE OPENING:
       <header className="p-4 sm:p-6 bg-background/50 backdrop-blur-xl border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => {
-              stopAudio();
-              setPhase(AppPhase.DASHBOARD);
-              navigate('/dashboard'); // Navigate back to dashboard
-            }}
+            onClick={() => { stopAudio(); setPhase(AppPhase.DASHBOARD); }}
             className="w-10 h-10 rounded-full bg-secondary hover:bg-muted flex items-center justify-center transition-all border border-border"
           >
             <ChevronRight className="rotate-180" size={20} />
@@ -2981,7 +2882,7 @@ EXAMPLE OPENING:
                           setPracticeAnswers({});
                           setShowPracticeResults(false);
                           if (currentModule) {
-                            startModuleLearning(currentModule, currentLesson);
+                            startModuleLearning(currentModule);
                           }
                         }}
                         className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold hover:scale-105 transition-all"
@@ -3006,171 +2907,165 @@ EXAMPLE OPENING:
   };
 
   const ModuleLearningView = () => (
-    <div className="min-h-screen bg-muted p-4 sm:p-6">
+    <div className="min-h-screen bg-muted p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-card rounded-[2rem] sm:rounded-[2.5rem] shadow-xl p-4 sm:p-8 mb-4 sm:mb-6 border border-indigo-100">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
-            <div className="flex items-center gap-3 sm:gap-4">
+        <div className="bg-card rounded-[2.5rem] shadow-xl p-8 mb-6 border border-indigo-100">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => {
                   stopAudio();
                   setShowModuleSession(false);
                   setCurrentModule(null);
                 }}
-                className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary hover:bg-muted rounded-xl flex items-center justify-center transition-all shrink-0"
+                className="w-12 h-12 bg-secondary hover:bg-muted rounded-xl flex items-center justify-center transition-all"
               >
-                <ArrowRight size={20} className="rotate-180 sm:w-6 sm:h-6" />
+                <ArrowRight size={24} className="rotate-180" />
               </button>
               <div>
-                <span className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-widest">{currentModule?.type} Lesson</span>
-                <h1 className="text-xl sm:text-3xl font-black text-foreground leading-tight">{currentModule?.title}</h1>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">{currentModule?.type} Lesson</span>
+                <h1 className="text-3xl font-black text-foreground">{currentModule?.title}</h1>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
-              <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-50 text-indigo-700 rounded-xl text-xs sm:text-sm font-bold">
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold">
                 {currentModule?.level}
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 text-primary rounded-xl flex items-center justify-center">
-                {currentModule?.type === 'Grammar' && <Book size={20} className="sm:w-6 sm:h-6" />}
-                {currentModule?.type === 'Vocabulary' && <Sparkles size={20} className="sm:w-6 sm:h-6" />}
-                {currentModule?.type === 'Speaking' && <Mic size={20} className="sm:w-6 sm:h-6" />}
-                {currentModule?.type === 'Listening' && <Headphones size={20} className="sm:w-6 sm:h-6" />}
-                {currentModule?.type === 'Reading' && <BookOpen size={20} className="sm:w-6 sm:h-6" />}
-                {currentModule?.type === 'Writing' && <FileText size={20} className="sm:w-6 sm:h-6" />}
+              <div className="w-12 h-12 bg-indigo-100 text-primary rounded-xl flex items-center justify-center">
+                {currentModule?.type === 'Grammar' && <Book size={24} />}
+                {currentModule?.type === 'Vocabulary' && <Sparkles size={24} />}
+                {currentModule?.type === 'Speaking' && <Mic size={24} />}
+                {currentModule?.type === 'Listening' && <Headphones size={24} />}
+                {currentModule?.type === 'Reading' && <BookOpen size={24} />}
+                {currentModule?.type === 'Writing' && <FileText size={24} />}
               </div>
             </div>
           </div>
 
           {/* Progress */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-secondary rounded-full h-1.5 sm:h-2 overflow-hidden">
+            <div className="flex-1 bg-secondary rounded-full h-2 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear"
-                style={{ width: `${sessionProgress}%` }}
+                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                style={{ width: `${currentModule?.progress || 0}%` }}
               />
             </div>
-            <span className="text-xs sm:text-sm font-bold text-muted-foreground">{Math.round(sessionProgress)}%</span>
-            {isCompletionEnabled && (
-              <span className="text-[10px] sm:text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full animate-pulse whitespace-nowrap">
-                Ready to Complete
-              </span>
-            )}
+            <span className="text-sm font-bold text-muted-foreground">{currentModule?.progress}%</span>
           </div>
         </div>
 
         {/* AI Teacher Card */}
-        <div className="bg-card rounded-[2rem] sm:rounded-[2.5rem] shadow-xl p-6 sm:p-10 mb-4 sm:mb-6 border border-indigo-100">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 sm:mb-8 text-center sm:text-left">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
-              <User size={32} className="text-white sm:w-10 sm:h-10" />
+        <div className="bg-card rounded-[2.5rem] shadow-xl p-10 mb-6 border border-indigo-100">
+          <div className="flex items-center gap-6 mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <User size={40} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1">{currentPersona?.name}</h3>
-              <p className="text-sm sm:text-base text-muted-foreground">{currentPersona?.role}</p>
+              <h3 className="text-2xl font-bold text-foreground mb-1">{currentPersona?.name}</h3>
+              <p className="text-muted-foreground">{currentPersona?.role}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => startModuleLearning(currentModule!)}
                 disabled={isLive}
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${isLive
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${isLive
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-gradient-to-br from-green-500 to-emerald-600 hover:scale-110 hover:from-green-600 hover:to-emerald-700'
                   }`}
               >
-                <Mic size={24} className="text-white sm:w-7 sm:h-7" />
+                <Mic size={28} className="text-white" />
               </button>
               <button
                 onClick={() => stopAudio()}
                 disabled={!isLive}
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${!isLive
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ${!isLive
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-red-500 hover:scale-110 hover:bg-red-600'
                   }`}
               >
-                <MicOff size={24} className="text-white sm:w-7 sm:h-7" />
+                <MicOff size={28} className="text-white" />
               </button>
             </div>
           </div>
 
-          {/* Lesson Content Box */}
-          <div className="flex-1 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl overflow-hidden flex flex-col relative backdrop-blur-md min-h-[400px] sm:min-h-[500px]">
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10" />
-
-            {/* AI Teacher Output */}
-            <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 custom-scrollbar pr-2 sm:pr-4 pt-4 relative">
-              {outputTranscription ? (
-                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <div className="flex items-center gap-3 mb-4 sticky top-0">
-                    <div className="flex items-center gap-2 px-2 py-0.5 sm:px-3 sm:py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
-                      <Sparkles size={10} className="sm:w-3 sm:h-3" />
-                      AI Teacher
-                    </div>
-                  </div>
-                  <p className="text-lg sm:text-xl md:text-2xl leading-relaxed text-slate-800 dark:text-slate-100 font-medium whitespace-pre-wrap">
-                    {outputTranscription}
-                  </p>
-                </div>
-              ) : !isLive ? (
-                <div className="h-full flex flex-col items-center justify-center text-center opacity-60 space-y-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <MessageSquare size={24} className="text-slate-400 sm:w-8 sm:h-8" />
+          {/* Lesson Content */}
+          <div className="bg-muted rounded-2xl p-6 min-h-[300px] max-h-[500px] overflow-y-auto">
+            {/* AI Teacher's Speech (Output Transcription) */}
+            {outputTranscription ? (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <User size={20} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-base sm:text-lg text-slate-500 font-medium">Virtual Classroom Ready</p>
-                    <p className="text-xs sm:text-sm text-slate-400">Click the microphone to start</p>
+                    <span className="text-sm font-bold text-foreground">{currentPersona?.name} (AI Teacher)</span>
+                    <p className="text-xs text-muted-foreground">Speaking now...</p>
                   </div>
                 </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                  <div className="flex justify-center">
-                    <div className="bg-gradient-to-r from-rose-500 to-red-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold animate-pulse shadow-lg flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform cursor-pointer" onClick={() => { /* Start functionality handled by voice */ }}>
-                      <Mic size={20} className="sm:w-6 sm:h-6" />
-                      Say "START" to begin
-                    </div>
-                  </div>
-                  <p className="text-slate-500 text-sm sm:text-base max-w-sm mx-auto">
-                    Your teacher is listening. Say "Start" to begin the lesson on <span className="text-slate-900 dark:text-white font-bold">{currentModule?.title}</span>.
-                  </p>
+                <div className="bg-card rounded-xl p-5 border-l-4 border-indigo-500 shadow-sm">
+                  <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">{outputTranscription}</p>
                 </div>
-              )}
-            </div>
-
-            {/* Teacher Thinking Indicator */}
-            {isThinking && (
-              <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex gap-1 z-20">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce delay-100" />
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-bounce delay-200" />
+              </div>
+            ) : !isLive ? (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                  <MessageSquare size={32} className="text-indigo-500" />
+                </div>
+                <p className="text-muted-foreground font-medium">Click the microphone to start your AI lesson</p>
+                <p className="text-sm text-muted-foreground mt-2">Your AI teacher will guide you through {currentModule?.title}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center px-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mb-6 animate-pulse shadow-lg">
+                  <Mic size={40} className="text-white" />
+                </div>
+                <p className="text-foreground font-bold text-2xl mb-3">🎤 Ready to Start!</p>
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-4 rounded-2xl mb-4 shadow-xl">
+                  <p className="text-xl font-black">Say "START" to begin</p>
+                </div>
+                <p className="text-muted-foreground text-sm max-w-md">
+                  Your AI teacher {currentPersona?.name} is listening. Just say the word <span className="font-bold text-foreground">"start"</span> and your lesson will begin!
+                </p>
               </div>
             )}
 
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-slate-900 via-white/80 dark:via-slate-900/80 to-transparent z-10 pointer-events-none" />
-
-            {/* User Input Overlay/Bottom */}
-            {inputTranscription && (
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 bg-slate-50/50 dark:bg-slate-800/50 -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 p-4 sm:p-6 text-xs sm:text-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">You Said</span>
-                </div>
-                <p className="text-slate-700 dark:text-slate-300 font-medium">{inputTranscription}</p>
+            {isThinking && (
+              <div className="flex items-center gap-2 mt-4 text-primary">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="text-sm font-medium ml-2">Teacher is thinking...</span>
               </div>
             )}
           </div>
 
+          {/* Input Transcription (What you said) */}
+          {inputTranscription && (
+            <div className="mt-6 bg-secondary/10 rounded-2xl p-6 border-l-4 border-secondary">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
+                  <User size={16} className="text-white" />
+                </div>
+                <span className="text-sm font-bold text-foreground">You said:</span>
+              </div>
+              <p className="text-foreground/90 text-lg leading-relaxed">{inputTranscription}</p>
+            </div>
+          )}
+
           {/* Connection Error */}
           {connectionError && (
-            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-6">
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-6">
               <div className="flex items-center gap-3">
-                <AlertCircle size={20} className="text-red-500 sm:w-6 sm:h-6" />
+                <AlertCircle size={24} className="text-red-500" />
                 <div className="flex-1">
-                  <p className="text-red-800 text-sm sm:text-base font-medium">{connectionError}</p>
+                  <p className="text-red-800 font-medium">{connectionError}</p>
                   <button
                     onClick={() => {
                       setConnectionError(null);
                       startModuleLearning(currentModule!);
                     }}
-                    className="text-red-600 text-xs sm:text-sm font-bold mt-2 hover:underline"
+                    className="text-red-600 text-sm font-bold mt-2 hover:underline"
                   >
                     Try Again
                   </button>
@@ -3181,59 +3076,21 @@ EXAMPLE OPENING:
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <button
-            disabled={!isCompletionEnabled}
-            onClick={async () => {
-              if (currentLesson) {
-                // Call API to complete lesson
-                try {
-                  await fetch(`/api/learning/lessons/${currentLesson.id}/complete`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      user_email: userEmail,
-                      time_spent: Math.round((sessionTimerRef.current ? sessionProgress : 0) * (currentLesson.estimated_minutes || 2) * 60 / 100), // Estimate minutes spent
-                      quiz_score: 100 // Full participation
-                    })
-                  });
-
-                  // Update local state if not already there (for UI feedback)
-                  // Note: We might want to refresh the full progress from server to be sure
-                  if (!completedModules.includes(currentLesson.id)) {
-                    setCompletedModules(prev => [...prev, currentLesson.id]);
-                  }
-                } catch (e) {
-                  console.error("Failed to save progress:", e);
-                }
-              }
-
-              // Fallback/Legacy: Mark module as incomplete/complete in local state if we want generic tracking
-              // But for now, we focus on the lesson.
-
+            onClick={() => {
               if (!completedModules.includes(currentModule!.id)) {
-                // Logic to check if ALL lessons in module are done? 
-                // For now, just keep the points update
+                setCompletedModules([...completedModules, currentModule!.id]);
                 setPoints(points + 50);
-
-                // Enable UI badge for module completion implicitly for this session/local user
-                // This satisfies "show if its is complete show that in the module page" immediately
-                setCompletedModules(prev => [...prev, currentModule!.id]);
               }
-
               stopAudio();
-              if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
               setShowModuleSession(false);
               setCurrentModule(null);
-
-              // Refresh progress data to ensure UI reflects backend state
-              // We'll call a refresh if we have a function for it, or just let the user navigate
             }}
-            className={`py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-base sm:text-lg shadow-xl flex items-center justify-center gap-2 transition-all ${!isCompletionEnabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:scale-105 animate-pulse'
-              }`}
+            className="py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2"
           >
-            {isCompletionEnabled ? <CheckCircle2 size={20} className="sm:w-6 sm:h-6" /> : <Loader2 size={20} className="animate-spin sm:w-6 sm:h-6" />}
-            {isCompletionEnabled ? 'Complete Lesson' : `${Math.round(sessionProgress)}% Complete`}
+            <CheckCircle2 size={24} />
+            Complete Lesson
           </button>
           <button
             onClick={() => {
@@ -3241,7 +3098,7 @@ EXAMPLE OPENING:
               setShowModuleSession(false);
               setCurrentModule(null);
             }}
-            className="py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-base sm:text-lg shadow-sm hover:bg-gray-200 transition-all"
+            className="py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg shadow-sm hover:bg-gray-200 transition-all"
           >
             Save & Exit
           </button>
@@ -3286,7 +3143,6 @@ EXAMPLE OPENING:
   // --- Router ---
   return (
     <div className="app-container">
-      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage onGetStarted={() => navigate('/signup')} onExploreCourses={handleExploreCourses} onSignIn={() => navigate('/login')} />} />
         <Route path="/login" element={<LoginPage />} />
@@ -3305,40 +3161,8 @@ EXAMPLE OPENING:
         </Route>
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/learning-session" element={<ProtectedRoute>{LearningSessionView()}</ProtectedRoute>} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<TermsOfServicePage />} />
-        <Route path="/cookies" element={<CookiePolicyPage />} />
-
-        {/* Learning Platform Routes */}
-        <Route path="/learning/course/:courseId" element={<ProtectedRoute><CourseDetailPage /></ProtectedRoute>} />
-        <Route path="/learning/lesson/:lessonId" element={<ProtectedRoute><LessonPlayerPage /></ProtectedRoute>} />
-        <Route path="/learning/progress" element={<ProtectedRoute><LearningProgressPage /></ProtectedRoute>} />
-
         <Route path="*" element={<HomePage onGetStarted={() => navigate('/signup')} onExploreCourses={handleExploreCourses} onSignIn={() => navigate('/login')} />} />
       </Routes>
-
-      {/* Module Learning AI Session Modal */}
-      {showModuleSession && currentModule && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto"
-          onClick={(e) => {
-            // Only close if clicking directly on backdrop, not on modal content
-            if (e.target === e.currentTarget) {
-              // Prevent closing by clicking backdrop for AI sessions
-              e.stopPropagation();
-            }
-          }}
-        >
-          {ModuleLearningView()}
-        </div>
-      )}
-
-      {/* Detailed Lesson View Modal */}
-      {showLessonView && currentLesson && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
-          {DetailedLessonView()}
-        </div>
-      )}
     </div>
   );
 };

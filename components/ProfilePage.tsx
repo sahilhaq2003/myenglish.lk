@@ -218,7 +218,7 @@ export function ProfilePage() {
     };
 
     const handleDeleteAccount = async () => {
-        if (deleteConfirmation.toLowerCase() !== 'delete') return;
+        if (deleteConfirmation.trim().toLowerCase() !== 'delete') return;
 
         setDeleteLoading(true);
 
@@ -230,7 +230,9 @@ export function ProfilePage() {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/api/profile', {
+            // Use relative path and pass email in query param as well to ensure it reaches the server
+            // Some environments/proxies strip the body from DELETE requests
+            const response = await fetch(`/api/profile?email=${encodeURIComponent(emailToDelete)}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailToDelete })
@@ -242,7 +244,9 @@ export function ProfilePage() {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 data = await response.json();
             } else {
-                data = { message: await response.text() };
+                // If response is not JSON (e.g. text), treat as message or ignore detail
+                const text = await response.text();
+                data = { message: text || 'Operation completed' };
             }
 
             if (response.ok) {

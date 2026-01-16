@@ -251,7 +251,7 @@ app.post('/api/signup', async (req, res) => {
 
         const query = `INSERT INTO users 
             (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
-            VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`;
+            VALUES (?, ?, ?, ?, ?, 'free', NULL, NULL)`;
         pool.query(query, [username, email, hashedPassword, first_name, birthday], (err, result) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
@@ -418,11 +418,14 @@ app.post('/api/upgrade', (req, res) => {
 
     if (!email) return res.status(400).json({ message: 'Email required' });
 
-    // Set to 'pro' and give 1 year for now (or perpetual)
+    // Set to 'pro' and give 1 month subscription
+    // Also give 1 day of free trial after pro subscription ends
     const query = `UPDATE users SET 
             subscription_status = 'pro',
             pro_start_at = NOW(),
-            pro_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR)
+            pro_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
+            trial_start_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
+            trial_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH + INTERVAL 1 DAY)
             WHERE email = ?`;
 
     pool.query(query, [email], (err, result) => {
@@ -510,34 +513,65 @@ app.post('/api/enrollments', (req, res) => {
         return res.status(400).json({ message: 'User email, course ID, and course title are required' });
     }
 
-    const query = `
+    // Check subscription status first
+    const userQuery = 'SELECT subscription_status, trial_end_at, pro_end_at FROM users WHERE email = ?';
+    pool.query(userQuery, [userEmail], (err, results) => {
+        if (err) {
+            console.error('Error fetching user for enrollment check:', err);
+            return res.status(500).json({ message: 'Server error checking subscription' });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const user = results[0];
+        const isPro = user.subscription_status === 'pro';
+        const isTrial = user.subscription_status === 'trial' && user.trial_end_at && new Date() < new Date(user.trial_end_at);
+        const isUnlocked = isPro || isTrial;
+
+        // Strict restriction: Free users can ONLY enroll in 'English for Beginners'
+        // Check by course title (primary) and known free course IDs
+        const isFreeOnlyCourse = courseTitle === 'English for Beginners';
+        
+        // All other courses require pro/trial subscription
+        if (!isUnlocked && !isFreeOnlyCourse) {
+            console.log('Blocked enrollment for free user:', userEmail, 'Course:', courseTitle, 'ID:', courseId);
+            return res.status(403).json({ message: 'This is a Premium course. Please upgrade your plan to enroll.' });
+        }
+
+        // Also restrict to maximum number of free courses if needed
+        // For now, allowing unlimited free course (English for Beginners) but blocking premium
+
+        // Proceed with enrollment
+        const query = `
             INSERT INTO enrollments 
             (user_email, course_id, course_title, course_category, course_level, 
              course_description, course_thumbnail, course_instructor, course_lessons)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-    pool.query(query, [
-        userEmail,
-        courseId,
-        courseTitle,
-        courseCategory || '',
-        courseLevel || '',
-        courseDescription || '',
-        courseThumbnail || '',
-        courseInstructor || '',
-        courseLessons || 0
-    ], (err, result) => {
-        if (err) {
-            if (err.code === 'ER_DUP_ENTRY') {
-                console.log('User already enrolled in this course');
-                return res.status(409).json({ message: 'Already enrolled in this course' });
+        pool.query(query, [
+            userEmail,
+            courseId,
+            courseTitle,
+            courseCategory || '',
+            courseLevel || '',
+            courseDescription || '',
+            courseThumbnail || '',
+            courseInstructor || '',
+            courseLessons || 0
+        ], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    console.log('User already enrolled in this course');
+                    return res.status(409).json({ message: 'Already enrolled in this course' });
+                }
+                console.error('Error enrolling in course:', err);
+                return res.status(500).json({ message: 'Server error enrolling in course' });
             }
-            console.error('Error enrolling in course:', err);
-            return res.status(500).json({ message: 'Server error enrolling in course' });
-        }
-        console.log('Successfully enrolled in course:', courseTitle);
-        res.status(201).json({ message: 'Successfully enrolled', enrollmentId: result.insertId });
+            console.log('Successfully enrolled in course:', courseTitle);
+            res.status(201).json({ message: 'Successfully enrolled', enrollmentId: result.insertId });
+        });
     });
 });
 

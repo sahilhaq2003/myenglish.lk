@@ -14,7 +14,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageProps) {
-
+    const [isAnnualPricing, setIsAnnualPricing] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLevel, setSelectedLevel] = useState<string>('All');
 
@@ -35,7 +35,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         },
         {
             name: 'Pro Learner',
-            price: 5,
+            price: isAnnualPricing ? 9.99 : 14.99,
             description: 'Accelerate your fluency with unlimited practice.',
             features: [
                 'Unlimited AI conversations',
@@ -45,10 +45,24 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                 'Certificate of completion',
                 'Ad-free experience'
             ],
-            cta: 'Start 1-Day Free Trial',
+            cta: 'Start 7-Day Free Trial',
             popular: true
         },
-
+        {
+            name: 'Business',
+            price: isAnnualPricing ? 29.99 : 39.99,
+            description: 'For professionals and teams needing advanced skills.',
+            features: [
+                'Everything in Pro',
+                'Business English modules',
+                'Interview preparation',
+                'Presentation coaching',
+                'Team progress analytics',
+                'Priority support'
+            ],
+            cta: 'Contact Sales',
+            popular: false
+        }
     ];
 
     // Featured courses
@@ -66,22 +80,22 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
             category: 'Grammar',
             price: 'Premium',
             thumbnail: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop',
-            lessons: 53,
+            lessons: 48,
         },
         {
             id: '2',
             title: 'IELTS 8+ Band Guaranteed',
-            description: 'Comprehensive preparation for Academic and General Training.',
-            instructor: 'AI Tutor Emma',
+            description: 'Comprehensive IELTS preparation with proven strategies.',
+            instructor: 'Michael Chen',
             rating: 4.8,
-            reviews: 1890,
-            students: 12450,
-            duration: '14 weeks',
+            reviews: 1876,
+            students: 8932,
+            duration: '8 weeks',
             level: 'Advanced',
-            category: 'Test Prep',
-            price: 'Premium',
+            category: 'Exam Prep',
+            price: 99,
             thumbnail: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=600&fit=crop',
-            lessons: 55,
+            lessons: 64,
         },
         {
             id: '3',
@@ -115,18 +129,18 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         },
         {
             id: '5',
-            title: 'English for Beginners',
+            title: 'Conversational English for Beginners',
             description: 'Build confidence in everyday conversations.',
             instructor: 'Lisa Anderson',
             rating: 4.8,
             reviews: 2156,
             students: 18790,
-            duration: '10 weeks',
+            duration: '8 weeks',
             level: 'Beginner',
             category: 'Speaking',
             price: 'Premium',
             thumbnail: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop',
-            lessons: 40,
+            lessons: 36,
         },
         {
             id: '6',
@@ -152,6 +166,13 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         return matchesSearch && matchesLevel;
     });
 
+    // Check subscription status (moved to top level for UI)
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+    const isPro = subStatus === 'pro';
+    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+    const isUnlocked = isPro || isTrialActive;
+
     const handleEnrollCourse = async (course: typeof featuredCourses[0]) => {
         // Check if user is logged in
         const isLoggedIn = localStorage.getItem('myenglish_token') === 'logged_in';
@@ -163,6 +184,13 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         const userEmail = localStorage.getItem('myenglish_userEmail');
         if (!userEmail) {
             alert('Please log in to enroll in courses');
+            return;
+        }
+
+        // Restriction: Free users can ONLY enroll in 'English for Beginners'
+        if (!isUnlocked && course.title !== 'English for Beginners') {
+            alert("This is a Premium course. Please upgrade your plan to enroll.");
+            onGetStarted(); // Redirect to pricing/signup
             return;
         }
 
@@ -470,9 +498,22 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                         </div>
 
                                         <div className="flex items-center justify-between pt-4 border-t border-border">
+                                            <div>
+                                                {course.price === 'Premium' ? (
+                                                    <div>
+                                                        <div className="text-xs text-muted-foreground">Included in</div>
+                                                        <div className="text-lg font-bold text-primary">Premium</div>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <div className="text-xs text-muted-foreground">One-time</div>
+                                                        <div className="text-2xl font-bold text-foreground">${course.price}</div>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <button
                                                 onClick={() => handleEnrollCourse(course)}
-                                                className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                                                className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2"
                                             >
                                                 Enroll Now
                                                 <Play size={16} />
@@ -496,11 +537,24 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 Flexible pricing for every learning goal. Start free, upgrade anytime.
                             </p>
 
-
+                            {/* Billing Toggle */}
+                            <div className="flex items-center justify-center gap-4 mb-8">
+                                <span className={`text-sm font-bold ${!isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
+                                <button
+                                    onClick={() => setIsAnnualPricing(!isAnnualPricing)}
+                                    className="relative w-14 h-8 bg-primary/20 rounded-full transition-colors focus:outline-none"
+                                >
+                                    <div className={`absolute top-1 left-1 w-6 h-6 bg-primary rounded-full transition-transform ${isAnnualPricing ? 'translate-x-6' : ''}`} />
+                                </button>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${isAnnualPricing ? 'text-foreground' : 'text-muted-foreground'}`}>Yearly</span>
+                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full">Save 20%</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Pricing Cards */}
-                        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             {pricingPlans.map((plan) => (
                                 <div
                                     key={plan.name}
@@ -525,7 +579,9 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                             <span className="text-4xl font-black text-foreground">${plan.price}</span>
                                             <span className="text-muted-foreground">/mo</span>
                                         </div>
-
+                                        {isAnnualPricing && plan.price > 0 && (
+                                            <p className="text-xs text-muted-foreground mt-2">Billed ${Math.round(plan.price * 12)} yearly</p>
+                                        )}
                                     </div>
 
                                     <button
@@ -569,7 +625,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                             <ArrowRight size={24} />
                         </button>
                         <p className="mt-6 text-sm opacity-75">
-                            No credit card required • 1-day free trial • Cancel anytime
+                            No credit card required • 7-day free trial • Cancel anytime
                         </p>
                     </div>
                 </section>

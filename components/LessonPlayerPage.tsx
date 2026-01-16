@@ -80,6 +80,30 @@ export function LessonPlayerPage() {
         return () => stopAudio();
     }, []);
 
+    // Strict Access Control: Prevent entering classroom without subscription for premium courses
+    useEffect(() => {
+        if (!lesson) return;
+
+        const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+        const isPro = subStatus === 'pro';
+        const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+        const isUnlocked = isPro || isTrialActive;
+
+        // Force check: If not unlocked and not the free course, kick them out
+        const courseId = (lesson as any).course_id;
+
+        // Known free course IDs: '5', 'course_conversational_beginners'
+        const isFreeCourse = courseId === '5' || courseId === 'course_conversational_beginners';
+
+        if (!isUnlocked && !isFreeCourse) {
+            console.log("Blocking access to premium lesson:", lesson.title);
+            alert("This is a Premium lesson. Please upgrade to access.");
+            stopAudio();
+            navigate('/pricing');
+        }
+    }, [lesson, navigate]);
+
     // Auto-scroll transcription
     useEffect(() => {
         if (transcriptionContainerRef.current) {
