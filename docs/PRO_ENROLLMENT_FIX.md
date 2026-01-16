@@ -1,83 +1,87 @@
-# ✅ Fixed: Non-Pro Account Course Enrollment Restrictions (v2)
+# ✅ Fixed: Non-Pro Account Course Enrollment Restrictions
 
 ## 🔒 **Issue Fixed**
-Non-pro (free) accounts were able to enroll in premium courses. The root cause was that new users were automatically given a 3-day trial subscription upon signup, effectively giving all users pro access initially.
+Non-pro (free) accounts were able to enroll in premium courses, which should not be allowed. Only authenticated Pro/Trial users can enroll in premium courses.
 
 ## ✨ **Changes Made**
 
-### 1. **Fixed Signup Process** (`server/index.js`)
-- **Changed**: New users now created with `subscription_status = 'free'` instead of `'trial'`
-- **Before**: `VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`
-- **After**: `VALUES (?, ?, ?, ?, ?, 'free', NULL, NULL)`
-- **Result**: Free users cannot enroll in premium courses until they purchase Pro subscription
-
-### 2. **Server-Side Enrollment Validation** (`server/index.js`)
+### 1. **Server-Side Enrollment Validation** (`server/index.js`)
 - **Endpoint**: `POST /api/enrollments`
-- **Logic**:
-  - Only allows free users to enroll in "English for Beginners"
-  - All other courses require Pro or active Trial subscription
-  - Returns **403 Forbidden** for unauthorized enrollment attempts
+- **Logic Updated**:
+  - Simplified the free course check to only allow "English for Beginners"
+  - All other courses now require Pro or active Trial subscription
+  - Returns **403 Forbidden** with appropriate error message for unauthorized enrollment attempts
+  
+**Key Change:**
+```javascript
+// Before: Checked specific course IDs
+const isAllowedCourse = (
+    courseId === '5' ||
+    courseId === 'course_conversational_beginners' ||
+    courseTitle === 'English for Beginners'
+);
 
-### 3. **Frontend Error Handling** (HomePage.tsx, CoursesPage.tsx, CourseDetailPage.tsx)
+// After: Check only by course title (simpler & more reliable)
+const isFreeOnlyCourse = courseTitle === 'English for Beginners';
+```
+
+### 2. **Frontend Error Handling** (HomePage.tsx, CoursesPage.tsx, CourseDetailPage.tsx)
 - Added proper **403 Forbidden** error handling in enrollment flows
 - When a non-pro user attempts to enroll in a premium course:
   - Server returns 403 status
-  - Frontend displays server error message
+  - Frontend displays the server error message
   - User is redirected to pricing page
-  - No enrollment is created
+  - No enrollment is created in database
 
-## 🧪 **Testing Scenarios**
-
-### Test Case 1: New User (Free Account)
-1. Create new account via signup
-2. Login with new account
-3. Try to enroll in "Complete English Grammar Mastery"
-4. **Expected**: Alert shows "This is a Premium course. Please upgrade your plan to enroll."
-5. **Result**: Redirected to pricing, enrollment blocked ✅
-
-### Test Case 2: Pro User
-1. Create pro account or upgrade subscription
-2. Try to enroll in premium course
-3. **Expected**: Enrollment succeeds
-4. **Result**: Successfully enrolled ✅
-
-### Test Case 3: Free User - "English for Beginners"
-1. Create new (free) account
-2. Try to enroll in "English for Beginners"
-3. **Expected**: Enrollment succeeds
-4. **Result**: Successfully enrolled ✅
-
-## 📋 **Root Cause Analysis**
-
-**Why it was broken:**
+**Added Response Handling:**
 ```javascript
-// BEFORE (All new users got 3-day trial):
-const query = `INSERT INTO users 
-    (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
-    VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`;
-
-// AFTER (New users now created as free):
-const query = `INSERT INTO users 
-    (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
-    VALUES (?, ?, ?, ?, ?, 'free', NULL, NULL)`;
+if (response.status === 403) {
+    const data = await response.json();
+    alert(data.message || 'This is a Premium course. Please upgrade your plan to enroll.');
+    navigate('/pricing');
+    return;
+}
 ```
 
+### 3. **Frontend Validation** (Already in place)
+- HomePage.tsx: Shows "Unlock Premium" button for non-pro users viewing premium courses
+- CoursesPage.tsx: Locks premium courses for free users with `isLocked()` check
+- CourseDetailPage.tsx: Prevents enrollment attempt with frontend check
+
+## 🧪 **Testing Scenario**
+
+### Test Case 1: Free User Attempting Premium Course Enrollment
+1. Create/login with a free account (no Pro/Trial subscription)
+2. Try to enroll in any course except "English for Beginners"
+3. **Expected**: Alert shows "This is a Premium course. Please upgrade your plan to enroll."
+4. **Result**: Redirected to pricing page, enrollment blocked
+
+### Test Case 2: Pro User Enrolling in Premium Course
+1. Create/login with a Pro/Trial account
+2. Try to enroll in premium course
+3. **Expected**: Enrollment succeeds, redirected to course
+4. **Result**: Successfully enrolled
+
+### Test Case 3: Any User Enrolling in "English for Beginners"
+1. Create/login with any account type
+2. Try to enroll in "English for Beginners"
+3. **Expected**: Enrollment succeeds for all users
+4. **Result**: Successfully enrolled
+
 ## 📋 **Files Modified**
-- ✅ `server/index.js` - Fixed signup user creation
-- ✅ `components/HomePage.tsx` - Error handling already in place
-- ✅ `components/CoursesPage.tsx` - Error handling already in place
-- ✅ `components/CourseDetailPage.tsx` - Error handling already in place
+- ✅ `server/index.js` - Updated enrollment validation logic
+- ✅ `components/HomePage.tsx` - Added 403 error handling
+- ✅ `components/CoursesPage.tsx` - Added 403 error handling
+- ✅ `components/CourseDetailPage.tsx` - Added 403 error handling
 
 ## 🔍 **Security Notes**
-- Server-side validation is the **primary security layer** - cannot be bypassed
+- Server-side validation is the **primary security layer** - cannot be bypassed by client-side manipulation
 - All enrollment requests check user subscription status from database
-- Subscription status defaults to 'free' for new accounts
-- Proper HTTP status codes (403 Forbidden) for unauthorized requests
-- Database defaults to 'free' status as fallback
+- Free users can only access "English for Beginners" course
+- Proper HTTP status codes (403 Forbidden) are used for unauthorized requests
 
 ## ✅ **Status**
-- **✓ Root cause identified and fixed**
-- **✓ Signup process corrected**
-- **✓ Enrollment validation in place**
-- **✓ Frontend error handling updated**
-- **Ready for deployment**
+- **✓ Implemented**
+- **✓ Frontend handlers updated**
+- **✓ Error messages improved**
+- **Ready for testing**
