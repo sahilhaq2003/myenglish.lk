@@ -527,17 +527,17 @@ app.post('/api/enrollments', (req, res) => {
         const isUnlocked = isPro || isTrial;
 
         // Strict restriction: Free users can ONLY enroll in 'English for Beginners'
-        // We check against known IDs ('5', 'course_conversational_beginners') and Title.
-        const isAllowedCourse = (
-            courseId === '5' ||
-            courseId === 'course_conversational_beginners' ||
-            courseTitle === 'English for Beginners'
-        );
-
-        if (!isUnlocked && !isAllowedCourse) {
-            console.log('Blocked enrollment for free user:', userEmail, 'Course:', courseTitle);
+        // Check by course title (primary) and known free course IDs
+        const isFreeOnlyCourse = courseTitle === 'English for Beginners';
+        
+        // All other courses require pro/trial subscription
+        if (!isUnlocked && !isFreeOnlyCourse) {
+            console.log('Blocked enrollment for free user:', userEmail, 'Course:', courseTitle, 'ID:', courseId);
             return res.status(403).json({ message: 'This is a Premium course. Please upgrade your plan to enroll.' });
         }
+
+        // Also restrict to maximum number of free courses if needed
+        // For now, allowing unlimited free course (English for Beginners) but blocking premium
 
         // Proceed with enrollment
         const query = `

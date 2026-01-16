@@ -202,6 +202,12 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                 return;
             }
 
+            if (response.status === 403) {
+                alert(data.message || 'This is a Premium course. Please upgrade your plan to enroll.');
+                onGetStarted();
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to enroll in course');
             }

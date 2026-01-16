@@ -140,6 +140,13 @@ export function CoursesPage() {
                 return;
             }
 
+            if (response.status === 403) {
+                const data = await response.json();
+                alert(data.message || 'This is a Premium course. Please upgrade your plan to enroll.');
+                navigate('/pricing');
+                return;
+            }
+
             if (response.ok) {
                 setEnrolledCourses(prev => [...prev, course.id]);
                 alert(`Successfully enrolled in "${course.title}"!`);
