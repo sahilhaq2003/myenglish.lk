@@ -1774,7 +1774,7 @@ EXAMPLE OPENING:
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => navigate('/dashboard/learn')}
+                        onClick={() => navigate(`/learning/course/${course.learning_course_id || course.course_id}`)}
                         className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
                       >
                         Continue Learning
