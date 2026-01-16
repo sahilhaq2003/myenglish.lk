@@ -251,7 +251,7 @@ app.post('/api/signup', async (req, res) => {
 
         const query = `INSERT INTO users 
             (username, email, password, first_name, birthday, subscription_status, trial_start_at, trial_end_at) 
-            VALUES (?, ?, ?, ?, ?, 'trial', NOW(), DATE_ADD(NOW(), INTERVAL 3 DAY))`;
+            VALUES (?, ?, ?, ?, ?, 'free', NULL, NULL)`;
         pool.query(query, [username, email, hashedPassword, first_name, birthday], (err, result) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
@@ -418,11 +418,14 @@ app.post('/api/upgrade', (req, res) => {
 
     if (!email) return res.status(400).json({ message: 'Email required' });
 
-    // Set to 'pro' and give 1 year for now (or perpetual)
+    // Set to 'pro' and give 1 month subscription
+    // Also give 1 day of free trial after pro subscription ends
     const query = `UPDATE users SET 
             subscription_status = 'pro',
             pro_start_at = NOW(),
-            pro_end_at = DATE_ADD(NOW(), INTERVAL 1 YEAR)
+            pro_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
+            trial_start_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
+            trial_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH + INTERVAL 1 DAY)
             WHERE email = ?`;
 
     pool.query(query, [email], (err, result) => {

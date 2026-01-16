@@ -166,6 +166,13 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
         return matchesSearch && matchesLevel;
     });
 
+    // Check subscription status (moved to top level for UI)
+    const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
+    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
+    const isPro = subStatus === 'pro';
+    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
+    const isUnlocked = isPro || isTrialActive;
+
     const handleEnrollCourse = async (course: typeof featuredCourses[0]) => {
         // Check if user is logged in
         const isLoggedIn = localStorage.getItem('myenglish_token') === 'logged_in';
@@ -180,8 +187,15 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
             return;
         }
 
+        // Restriction: Free users can ONLY enroll in 'English for Beginners'
+        if (!isUnlocked && course.title !== 'English for Beginners') {
+            alert("This is a Premium course. Please upgrade your plan to enroll.");
+            onGetStarted(); // Redirect to pricing/signup
+            return;
+        }
+
         try {
-            const response = await fetch('http://localhost:3001/api/enrollments', {
+            const response = await fetch('/api/enrollments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -428,8 +442,8 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 >
                                     {/* Thumbnail */}
                                     <div className="relative h-48 overflow-hidden">
-                                        <img 
-                                            src={course.thumbnail} 
+                                        <img
+                                            src={course.thumbnail}
                                             alt={course.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                         />
