@@ -90,8 +90,9 @@ export function CourseDetailPage() {
 
         if (!course) return;
 
-        // Restrict free users to only "English for Beginners"
-        if (!isUnlocked && course.title !== 'English for Beginners') {
+        // Restrict free users to only "English for Beginners" and "IELTS"
+        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        if (!isUnlocked && !ALLOWED_FREE_TITLES.includes(course.title)) {
             alert("This is a Premium course. Please upgrade your plan to enroll.");
             navigate('/pricing');
             return;
@@ -191,12 +192,28 @@ export function CourseDetailPage() {
         }
     };
 
-    const startLesson = (lessonId: string) => {
-        // Strictly block premium content for non-Pro users
-        if (!isUnlocked && course?.title !== 'English for Beginners') {
-            alert("This is a Premium course. Please upgrade to Pro to access this content.");
-            navigate('/pricing');
-            return;
+    const startLesson = (lessonId: string, lessonIndex: number = 0, moduleIndex: number = 0) => {
+        // Enforce Free Tier Restrictions:
+        // 1. Course Check: Allowed courses (Beginner, IELTS)
+        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        const isFreeCourse = course && ALLOWED_FREE_TITLES.includes(course.title);
+
+        // 2. Lesson Check: Only first 2 lessons of FIRST module (or globally first 2)
+        // Interpreting "first 2 lessons per course" as strictly the very first 2 lessons available (Module 1, Lesson 1 & 2)
+        // So moduleIndex must be 0, and lessonIndex must be < 2.
+        const isFreeLesson = moduleIndex === 0 && lessonIndex < 2;
+
+        if (!isUnlocked) {
+            if (!isFreeCourse) {
+                alert("This is a Premium course. Please upgrade to Pro to access.");
+                navigate('/pricing');
+                return;
+            }
+            if (!isFreeLesson) {
+                alert("Free plan users can only access the first 2 lessons. Upgrade to Pro for full access!");
+                navigate('/pricing');
+                return;
+            }
         }
 
         // General enrollment check
@@ -207,7 +224,13 @@ export function CourseDetailPage() {
         navigate(`/learning/lesson/${lessonId}`);
     };
 
-    const getStatusIcon = (status: string) => {
+    const getStatusIcon = (status: string, lessonIndex: number = 0, moduleIndex: number = 0) => {
+        // Check if locked for free user
+        if (!isUnlocked) {
+            const isFreeLesson = moduleIndex === 0 && lessonIndex < 2;
+            if (!isFreeLesson) return <Lock className="text-gray-400" size={16} />;
+        }
+
         if (!isEnrolled && !isUnlocked) return <Lock className="text-gray-400" size={16} />;
 
         switch (status) {
@@ -389,14 +412,14 @@ export function CourseDetailPage() {
                                                         className="border-b border-border last:border-b-0 hover:bg-white dark:hover:bg-zinc-900 transition-colors"
                                                     >
                                                         <button
-                                                            onClick={() => startLesson(lesson.id)}
+                                                            onClick={() => startLesson(lesson.id, lessonIndex, index)} // Pass indices
                                                             className="w-full p-4 flex items-center gap-4 text-left"
                                                         >
                                                             <div className="flex-shrink-0">
-                                                                {getStatusIcon(lesson.user_progress?.status)}
+                                                                {getStatusIcon(lesson.user_progress?.status, lessonIndex, index)}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="font-bold mb-1">
+                                                                <div className={`font-bold mb-1 ${!isUnlocked && (index > 0 || lessonIndex > 1) ? 'text-gray-400' : ''}`}>
                                                                     {lessonIndex + 1}. {lesson.title}
                                                                 </div>
                                                                 <div className="text-xs text-muted-foreground flex items-center gap-3">
@@ -414,7 +437,12 @@ export function CourseDetailPage() {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <ChevronRight className="flex-shrink-0 text-muted-foreground" size={20} />
+                                                            {/* Lock Icon Logic */}
+                                                            {!isUnlocked && (index > 0 || lessonIndex > 1) ? (
+                                                                <Lock className="flex-shrink-0 text-gray-400" size={20} />
+                                                            ) : (
+                                                                <ChevronRight className="flex-shrink-0 text-muted-foreground" size={20} />
+                                                            )}
                                                         </button>
                                                     </div>
                                                 ))}

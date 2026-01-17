@@ -131,6 +131,14 @@ export function LessonPlayerPage() {
                 : `/api/learning/lessons/${lessonId}`;
 
             const response = await fetch(url);
+
+            if (response.status === 403) {
+                const data = await response.json();
+                alert(data.message || "This content is locked. Please upgrade to Pro.");
+                navigate('/pricing');
+                return;
+            }
+
             const data = await response.json();
             setLesson(data);
         } catch (error) {
