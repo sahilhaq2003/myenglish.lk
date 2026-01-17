@@ -185,6 +185,41 @@ pool.query(createEnrollmentsTableQuery, (err) => {
 */
 
 // =====================================================
+// DATABASE MIGRATIONS (SUBSCRIPTION SYSTEM)
+// =====================================================
+const ensureSubscriptionColumns = () => {
+    if (!pool) {
+        console.log("Pool not initialized yet, retrying migration in 1s...");
+        setTimeout(ensureSubscriptionColumns, 1000);
+        return;
+    }
+
+    const subscriptionColumns = [
+        "ADD COLUMN subscription_status VARCHAR(50) DEFAULT 'free'",
+        "ADD COLUMN pro_start_at DATETIME",
+        "ADD COLUMN pro_end_at DATETIME",
+        "ADD COLUMN trial_start_at DATETIME",
+        "ADD COLUMN trial_end_at DATETIME"
+    ];
+
+    console.log("Checking subscription columns...");
+
+    subscriptionColumns.forEach(col => {
+        pool.query(`ALTER TABLE users ${col}`, (err) => {
+            // Ignore duplicate column errors (code: ER_DUP_FIELDNAME)
+            if (err && err.code !== 'ER_DUP_FIELDNAME') {
+                console.error(`Error adding column ${col}:`, err.message);
+            } else if (!err) {
+                console.log(`Added column: ${col}`);
+            }
+        });
+    });
+};
+
+// Start checking
+ensureSubscriptionColumns();
+
+// =====================================================
 // LEARNING PLATFORM ROUTES
 // =====================================================
 app.use('/api/learning', learningRoutes);
@@ -418,14 +453,13 @@ app.post('/api/upgrade', (req, res) => {
 
     if (!email) return res.status(400).json({ message: 'Email required' });
 
-    // Set to 'pro' and give 1 month subscription
-    // Also give 1 day of free trial after pro subscription ends
+    // Set to 'pro' for 1 month (No trial)
     const query = `UPDATE users SET 
             subscription_status = 'pro',
             pro_start_at = NOW(),
             pro_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
-            trial_start_at = DATE_ADD(NOW(), INTERVAL 1 MONTH),
-            trial_end_at = DATE_ADD(NOW(), INTERVAL 1 MONTH + INTERVAL 1 DAY)
+            trial_start_at = NULL,
+            trial_end_at = NULL
             WHERE email = ?`;
 
     pool.query(query, [email], (err, result) => {
