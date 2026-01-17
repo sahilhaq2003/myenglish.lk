@@ -94,8 +94,8 @@ export function CoursesPage() {
         if (isUnlocked) return false;
 
         // Allowed Free Courses
-        const ALLOWED_FREE_IDS = ['course_beginner_english', 'course_ielts_prep', '1', '2'];
-        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        const ALLOWED_FREE_IDS = ['course_conversational_beginners', '5'];
+        const ALLOWED_FREE_TITLES = ['English for Beginners'];
 
         if (ALLOWED_FREE_IDS.includes(course.id) || ALLOWED_FREE_TITLES.includes(course.title)) {
             return false;
@@ -114,9 +114,9 @@ export function CoursesPage() {
         // Ensure price is treated as a number
         const price = Number(course.price);
 
-        // Restriction: Free users can ONLY enroll in Limited Courses
-        const ALLOWED_FREE_IDS = ['course_beginner_english', 'course_ielts_prep', '1', '2'];
-        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        // Restriction: Free users can ONLY enroll in English for Beginners
+        const ALLOWED_FREE_IDS = ['course_conversational_beginners', '5'];
+        const ALLOWED_FREE_TITLES = ['English for Beginners'];
         const isFreeCourse = ALLOWED_FREE_IDS.includes(course.id) || ALLOWED_FREE_TITLES.includes(course.title);
 
         if (!isUnlocked && !isFreeCourse) {

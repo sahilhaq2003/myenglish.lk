@@ -563,10 +563,10 @@ app.post('/api/enrollments', (req, res) => {
         const isTrial = user.subscription_status === 'trial' && user.trial_end_at && new Date() < new Date(user.trial_end_at);
         const isUnlocked = isPro || isTrial;
 
-        // Strict restriction: Free users can ONLY enroll in Limited Courses (First 2)
+        // Strict restriction: Free users can ONLY enroll in English for Beginners
         // Check by course title (primary) and known free course IDs
-        const ALLOWED_FREE_TILES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
-        const ALLOWED_FREE_IDS = ['1', '2', 'course_beginner_english', 'course_ielts_prep'];
+        const ALLOWED_FREE_TILES = ['English for Beginners'];
+        const ALLOWED_FREE_IDS = ['5', 'course_conversational_beginners'];
 
         const isFreeLimitedCourse = ALLOWED_FREE_TILES.includes(courseTitle) || ALLOWED_FREE_IDS.includes(courseId);
 

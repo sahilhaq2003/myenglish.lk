@@ -81,8 +81,8 @@ export function CourseDetailPage() {
 
         if (!course) return;
 
-        // Restrict free users to only "English for Beginners" and "IELTS"
-        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        // Restrict free users to only "English for Beginners"
+        const ALLOWED_FREE_TITLES = ['English for Beginners'];
         if (!isUnlocked && !ALLOWED_FREE_TITLES.includes(course.title)) {
             alert("This is a Premium course. Please upgrade your plan to enroll.");
             navigate('/pricing');
@@ -185,8 +185,8 @@ export function CourseDetailPage() {
 
     const startLesson = (lessonId: string, lessonIndex: number = 0, moduleIndex: number = 0) => {
         // Enforce Free Tier Restrictions:
-        // 1. Course Check: Allowed courses (Beginner, IELTS)
-        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        // 1. Course Check: Allowed courses (Beginner only)
+        const ALLOWED_FREE_TITLES = ['English for Beginners'];
         const isFreeCourse = course && ALLOWED_FREE_TITLES.includes(course.title);
 
         // 2. Lesson Check: Only first 2 lessons of FIRST module (or globally first 2)
