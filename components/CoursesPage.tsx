@@ -93,10 +93,17 @@ export function CoursesPage() {
     const isUnlocked = isPro || isTrialActive;
 
     const isLocked = (course: Course) => {
-        // If unlocked, not locked.
+        // If unlocked (Pro or Trial), not locked.
         if (isUnlocked) return false;
-        // If English for Beginners, not locked.
-        if (course.title === 'English for Beginners') return false;
+
+        // Allowed Free Courses
+        const ALLOWED_FREE_IDS = ['course_beginner_english', 'course_ielts_prep', '1', '2'];
+        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+
+        if (ALLOWED_FREE_IDS.includes(course.id) || ALLOWED_FREE_TITLES.includes(course.title)) {
+            return false;
+        }
+
         // Otherwise, locked.
         return true;
     };
@@ -110,8 +117,12 @@ export function CoursesPage() {
         // Ensure price is treated as a number
         const price = Number(course.price);
 
-        // Restriction: Free users can ONLY enroll in 'English for Beginners'
-        if (!isUnlocked && course.title !== 'English for Beginners') {
+        // Restriction: Free users can ONLY enroll in Limited Courses
+        const ALLOWED_FREE_IDS = ['course_beginner_english', 'course_ielts_prep', '1', '2'];
+        const ALLOWED_FREE_TITLES = ['English for Beginners', 'IELTS 8+ Band Guaranteed'];
+        const isFreeCourse = ALLOWED_FREE_IDS.includes(course.id) || ALLOWED_FREE_TITLES.includes(course.title);
+
+        if (!isUnlocked && !isFreeCourse) {
             alert("This is a Premium course. Please upgrade your plan to enroll.");
             navigate('/pricing');
             return;
@@ -264,6 +275,12 @@ export function CoursesPage() {
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                                         <div className="absolute top-4 right-4 flex gap-2">
+                                            {/* Pro Badge for Premium Courses */}
+                                            {(!['course_beginner_english', 'course_ielts_prep'].includes(course.id) && !['English for Beginners', 'IELTS 8+ Band Guaranteed'].includes(course.title)) && (
+                                                <span className="px-3 py-1 rounded-full text-xs font-black backdrop-blur-md shadow-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white border border-white/20 uppercase tracking-wider">
+                                                    PRO
+                                                </span>
+                                            )}
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-lg ${getLevelColor(course.level)} bg-opacity-90`}>
                                                 {course.level}
                                             </span>
