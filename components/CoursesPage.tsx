@@ -86,11 +86,8 @@ export function CoursesPage() {
 
     // Check subscription status
     const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
-    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
-
     const isPro = subStatus === 'pro';
-    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
-    const isUnlocked = isPro || isTrialActive;
+    const isUnlocked = isPro;
 
     const isLocked = (course: Course) => {
         // If unlocked (Pro or Trial), not locked.

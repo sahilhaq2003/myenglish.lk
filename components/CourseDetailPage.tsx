@@ -55,17 +55,8 @@ export function CourseDetailPage() {
 
         // Check subscription status
         const status = localStorage.getItem('myenglish_subscriptionStatus');
-        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
-
-        let unlocked = false;
-        const now = new Date();
-
-        if (status === 'pro') {
-            unlocked = true;
-        } else if (status === 'trial' && trialEnd) {
-            if (now < new Date(trialEnd)) unlocked = true;
-        }
-        setIsUnlocked(unlocked);
+        const isPro = status === 'pro';
+        setIsUnlocked(isPro);
 
     }, [courseId, userEmail]);
 

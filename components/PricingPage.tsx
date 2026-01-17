@@ -54,7 +54,7 @@ export function PricingPage({ onGetStarted, onSignIn }: PricingPageProps) {
                 'Access to community forum',
                 'Limited daily lessons'
             ],
-            cta: 'Upgrade to Pro',
+            cta: 'Start for Free',
             popular: false
         },
         {
