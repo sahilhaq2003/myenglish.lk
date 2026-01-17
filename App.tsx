@@ -1461,7 +1461,7 @@ EXAMPLE OPENING:
         </nav>
 
         <div className="mt-auto space-y-4">
-          {subscriptionStatus !== 'pro' && (
+          {localStorage.getItem('myenglish_subscriptionStatus') !== 'pro' && (
             <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-[2rem] p-6 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
