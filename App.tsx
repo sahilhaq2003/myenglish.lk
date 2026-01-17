@@ -1514,14 +1514,7 @@ EXAMPLE OPENING:
 
           <div className="flex items-center gap-6">
             <ThemeToggle />
-            <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-2xl border border-orange-100 dark:border-orange-500/20 hidden sm:flex">
-              <Flame size={20} fill="currentColor" />
-              <span className="font-black">{streak} DAY STREAK</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded-2xl border border-yellow-100 dark:border-yellow-500/20 hidden sm:flex">
-              <Award size={20} fill="currentColor" />
-              <span className="font-black">{points} XP</span>
-            </div>
+            {/* Streak and XP removed */}
             <button
               onClick={() => navigate('/profile')}
               className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 flex items-center justify-center text-primary overflow-hidden hover:border-indigo-500 transition-all"
