@@ -190,9 +190,9 @@ router.get('/lessons/:id', async (req, res) => {
         const { user_email } = req.query;
         const connection = await getDBConnection();
 
-        // Get lesson
+        // Get lesson with module info
         const [lessons] = await connection.execute(`
-            SELECT l.*, m.course_id, m.title as module_title 
+            SELECT l.*, m.course_id, m.title as module_title, m.order_index as module_order
             FROM lessons l
             JOIN modules m ON l.module_id = m.id
             WHERE l.id = ?
@@ -205,7 +205,51 @@ router.get('/lessons/:id', async (req, res) => {
 
         const lesson = lessons[0];
 
-        // Parse JSON fields
+        // Check Access Control
+        if (user_email) {
+            const [users] = await connection.execute('SELECT subscription_status, trial_end_at FROM users WHERE email = ?', [user_email]);
+            if (users.length > 0) {
+                const user = users[0];
+                const isPro = user.subscription_status === 'pro';
+                const isTrial = user.subscription_status === 'trial' && new Date() < new Date(user.trial_end_at);
+                const isUnlocked = isPro || isTrial;
+
+                // FREE USER RESTRICTION
+                if (!isUnlocked) {
+                    // Rule: Can access only first 2 lessons of the first module.
+                    // Assuming module_order 1 is the first module.
+                    // Assuming order_index 1 and 2 are the first lessons.
+
+                    const isFirstModule = lesson.module_order === 1;
+                    const isFirstTwoLessons = lesson.order_index <= 2;
+
+                    // Also check if course is one of the allowed free courses?
+                    // Previous requirement: "Can access only limited courses".
+                    // If they managed to get a lesson ID for a blocked course, we should also block here.
+                    // But for simplicity and stricter security, let's enforce "First 2 lessons" rule globally for now.
+                    // Or we can check course_id.
+
+                    // Hardcoded Allowed Course IDs (from previous steps)
+                    // const ALLOWED_FREE_IDS = ['1', '2', 'course_beginner_english', 'course_ielts_prep'];
+                    // const isAllowedCourse = ALLOWED_FREE_IDS.includes(lesson.course_id);
+
+                    // Combined Rule: Must be Allowed Course AND (First Module AND First 2 Lessons)
+                    // Actually, if it's an allowed course, maybe we allow more?
+                    // Prompt says "Can access only limited lessons per course". So restriction applies even to allowed courses.
+
+                    if (!isFirstModule || !isFirstTwoLessons) {
+                        // Block content
+                        lesson.content_text = "This content is locked for Free users. Please upgrade to Pro to continue learning.";
+                        lesson.is_locked = true; // Flag for frontend
+                        // We don't error out, allowing frontend to show "Locked" state with description
+                        // OR we can return 403. Returning 403 is cleaner for "Security".
+                        await connection.end();
+                        return res.status(403).json({ message: 'This lesson is locked for Free users. Upgrade to Pro.' });
+                    }
+                }
+            }
+        }
+
         // Parse JSON fields
         if (lesson.learning_objectives && typeof lesson.learning_objectives === 'string') {
             try {

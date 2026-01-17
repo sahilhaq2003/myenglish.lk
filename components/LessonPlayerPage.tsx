@@ -85,10 +85,8 @@ export function LessonPlayerPage() {
         if (!lesson) return;
 
         const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
-        const trialEnd = localStorage.getItem('myenglish_trialEndAt');
         const isPro = subStatus === 'pro';
-        const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
-        const isUnlocked = isPro || isTrialActive;
+        const isUnlocked = isPro;
 
         // Force check: If not unlocked and not the free course, kick them out
         // valid checks: course_id present in lesson object?
@@ -131,6 +129,14 @@ export function LessonPlayerPage() {
                 : `/api/learning/lessons/${lessonId}`;
 
             const response = await fetch(url);
+
+            if (response.status === 403) {
+                const data = await response.json();
+                alert(data.message || "This content is locked. Please upgrade to Pro.");
+                navigate('/pricing');
+                return;
+            }
+
             const data = await response.json();
             setLesson(data);
         } catch (error) {

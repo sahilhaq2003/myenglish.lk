@@ -1461,25 +1461,27 @@ EXAMPLE OPENING:
         </nav>
 
         <div className="mt-auto space-y-4">
-          <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-[2rem] p-6 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
-                  <Flame size={20} className="text-yellow-300" fill="currentColor" />
+          {localStorage.getItem('myenglish_subscriptionStatus') !== 'pro' && (
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-[2rem] p-6 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
+                    <Flame size={20} className="text-yellow-300" fill="currentColor" />
+                  </div>
+                  <span className="text-[10px] font-black bg-yellow-400 text-black px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
                 </div>
-                <span className="text-[10px] font-black bg-yellow-400 text-black px-2 py-0.5 rounded-full uppercase tracking-wider">PRO</span>
+                <h4 className="font-bold mb-1 text-lg">Upgrade to Pro</h4>
+                <p className="text-xs text-indigo-100/80 mb-4 leading-relaxed">Unlimited AI conversation and personalized grammar analysis.</p>
+                <button
+                  onClick={() => navigate('/pricing')}
+                  className="w-full py-2.5 bg-white text-indigo-700 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-50 transition-colors"
+                >
+                  Upgrade Now
+                </button>
               </div>
-              <h4 className="font-bold mb-1 text-lg">Upgrade to Pro</h4>
-              <p className="text-xs text-indigo-100/80 mb-4 leading-relaxed">Unlimited AI conversation and personalized grammar analysis.</p>
-              <button
-                onClick={() => navigate('/pricing')}
-                className="w-full py-2.5 bg-white text-indigo-700 rounded-xl text-xs font-bold shadow-lg hover:bg-indigo-50 transition-colors"
-              >
-                Upgrade Now
-              </button>
             </div>
-          </div>
+          )}
 
           <div className="border-t border-border dark:border-white/5 pt-4 mt-2">
             <button

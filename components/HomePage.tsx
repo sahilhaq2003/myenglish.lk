@@ -45,7 +45,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                 'Certificate of completion',
                 'Ad-free experience'
             ],
-            cta: 'Start 1-Day Free Trial',
+            cta: 'Upgrade to Pro',
             popular: true
         },
 
@@ -154,10 +154,8 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
 
     // Check subscription status (moved to top level for UI)
     const subStatus = localStorage.getItem('myenglish_subscriptionStatus');
-    const trialEnd = localStorage.getItem('myenglish_trialEndAt');
     const isPro = subStatus === 'pro';
-    const isTrialActive = subStatus === 'trial' && trialEnd && new Date() < new Date(trialEnd);
-    const isUnlocked = isPro || isTrialActive;
+    const isUnlocked = isPro;
 
     const handleEnrollCourse = async (course: typeof featuredCourses[0]) => {
         // Check if user is logged in
@@ -261,7 +259,7 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                                 onClick={onGetStarted}
                                 className="group px-8 py-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center gap-3 min-w-[240px] justify-center"
                             >
-                                Start Free Trial
+                                Start Learning
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                             <button
@@ -591,11 +589,11 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                             onClick={onGetStarted}
                             className="px-10 py-5 bg-white text-primary rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 transition-all inline-flex items-center gap-3"
                         >
-                            Start Your Free Trial
+                            Start Learning Now
                             <ArrowRight size={24} />
                         </button>
                         <p className="mt-6 text-sm opacity-75">
-                            No credit card required • 1-day free trial • Cancel anytime
+                            No credit card required • Cancel anytime
                         </p>
                     </div>
                 </section>
