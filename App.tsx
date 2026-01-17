@@ -245,6 +245,9 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('myenglish_userEmail');
     return saved || 'sarah.j@example.com';
   });
+  const [userAvatar, setUserAvatar] = useState(() => {
+    return localStorage.getItem('myenglish_avatarUrl') || null;
+  });
   const [learningGoal, setLearningGoal] = useState(() => {
     const saved = localStorage.getItem('myenglish_learningGoal');
     return saved || 'Professional Communication';
@@ -1485,7 +1488,7 @@ EXAMPLE OPENING:
             >
               <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 flex items-center justify-center text-primary overflow-hidden group-hover:border-indigo-500 transition-colors">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
+                  src={userAvatar || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -1520,7 +1523,7 @@ EXAMPLE OPENING:
               className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 flex items-center justify-center text-primary overflow-hidden hover:border-indigo-500 transition-all"
             >
               <img
-                src={`https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
+                src={userAvatar || `https://ui-avatars.com/api/?name=${localStorage.getItem('myenglish_userName') || 'User'}&background=random`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -1644,7 +1647,7 @@ EXAMPLE OPENING:
 
     React.useEffect(() => {
       fetchEnrolledCourses();
-    }, []);
+    }, [location.pathname]);
 
     return (
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
