@@ -232,6 +232,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('myenglish_showLessonView');
     return saved === 'true';
   });
+  const [showRoleplaySession, setShowRoleplaySession] = useState(false);
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [practiceAnswers, setPracticeAnswers] = useState<Record<number, string>>({});
   const [showPracticeResults, setShowPracticeResults] = useState(false);
@@ -710,7 +711,8 @@ const App: React.FC = () => {
     await ensureApiKey();
     await initAudio();
     setCurrentPersona(persona);
-    setPhase(AppPhase.LEARNING_SESSION);
+    // Open as modal instead of changing phase
+    setShowRoleplaySession(true);
     setOutputTranscription('');
     setInputTranscription('');
     connectSession(AppPhase.LEARNING_SESSION, 0, persona);
@@ -1548,6 +1550,13 @@ EXAMPLE OPENING:
         </div>
       )}
 
+      {/* Roleplay Session Overlay */}
+      {showRoleplaySession && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+          <LearningSessionView />
+        </div>
+      )}
+
       {/* Mobile Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 lg:hidden flex justify-around p-4 z-50 shadow-2xl safe-area-pb">
         {[
@@ -2201,7 +2210,7 @@ EXAMPLE OPENING:
       <header className="p-4 sm:p-6 bg-background/50 backdrop-blur-xl border-b border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => { stopAudio(); setPhase(AppPhase.DASHBOARD); }}
+            onClick={() => { stopAudio(); setShowRoleplaySession(false); }}
             className="w-10 h-10 rounded-full bg-secondary hover:bg-muted flex items-center justify-center transition-all border border-border"
           >
             <ChevronRight className="rotate-180" size={20} />
