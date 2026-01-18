@@ -22,7 +22,7 @@ import {
   Settings, User, MapPin, TrendingUp, Info, RotateCcw, MessageSquare,
   Flame, Award, Layout, Book, Coffee, FileText, Mail, Headphones,
   Volume2, Keyboard, X, ChevronRight, Play, Pause, AlertCircle, Loader2,
-  LogOut, BarChart3, Calendar, ShieldCheck, Clock, HelpCircle, CheckCircle, Sparkles
+  LogOut, BarChart3, Calendar, ShieldCheck, Clock, HelpCircle, CheckCircle, Sparkles, Lock
 } from 'lucide-react';
 import { useTheme } from './context/ThemeContext';
 
@@ -1916,6 +1916,8 @@ EXAMPLE OPENING:
 
     const categories = ['All', 'Grammar', 'Vocabulary', 'Speaking', 'Listening', 'Reading', 'Writing'];
 
+    const isPro = localStorage.getItem('myenglish_subscriptionStatus') === 'pro';
+
     return (
       <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col gap-8">
@@ -1942,7 +1944,28 @@ EXAMPLE OPENING:
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredModules.length > 0 ? filteredModules.map(module => (
-            <div key={module.id} className="bg-card rounded-[2.5rem] border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full">
+            <div key={module.id} className="bg-card rounded-[2.5rem] border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col h-full relative">
+              {/* Lock Overlay for Non-Pro Users */}
+              {!isPro && (
+                <div className="absolute inset-0 z-50 bg-white/60 dark:bg-black/60 backdrop-blur-[3px] flex flex-col items-center justify-center text-center p-6 animate-in fade-in duration-500">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg mb-4 transform hover:scale-110 transition-transform">
+                    <Lock size={32} className="text-white" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Pro Feature</h3>
+                  <p className="text-slate-700 dark:text-slate-300 font-bold mb-6 leading-relaxed text-sm">
+                    Upgrade to unlock this module.
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/pricing');
+                    }}
+                    className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 transition-all shadow-xl"
+                  >
+                    Unlock Now
+                  </button>
+                </div>
+              )}
               {/* Beautiful Gradient Header with Icons */}
               <div className={`h-48 flex items-center justify-center relative overflow-hidden ${module.type === 'Grammar' ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500' :
                 module.type === 'Vocabulary' ? 'bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500' :
