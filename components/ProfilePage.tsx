@@ -54,7 +54,15 @@ export function ProfilePage() {
     });
 
     useEffect(() => {
+        // Essential Fix: Ensure body scroll is enabled when ProfilePage mounts.
+        // This handles cases where a modal might have left overflow:hidden set.
+        document.body.style.overflow = 'auto';
         fetchProfile();
+
+        return () => {
+            // Cleanup: Ensure scrolling is enabled when leaving the page too.
+            document.body.style.overflow = 'auto';
+        };
     }, []);
 
     const fetchProfile = async () => {

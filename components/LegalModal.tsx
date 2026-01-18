@@ -16,10 +16,10 @@ export function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = 'auto'; // Force auto which is default
         }
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = 'auto'; // Ensure cleanup restores scrolling
         };
     }, [isOpen]);
 
