@@ -356,6 +356,7 @@ const App: React.FC = () => {
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const sessionRef = useRef<any>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null); // New ref to hold microphone stream
   const isAiSpeakingRef = useRef(false);
   const transcriptionContainerRef = useRef<HTMLDivElement>(null);
 
@@ -388,6 +389,15 @@ const App: React.FC = () => {
       scriptProcessorRef.current.disconnect();
       scriptProcessorRef.current = null;
     }
+
+    // Stop all media stream tracks (Microphone)
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      mediaStreamRef.current = null;
+    }
+
     for (const source of sourcesRef.current) {
       try { source.stop(); } catch (e) { }
     }
@@ -400,6 +410,8 @@ const App: React.FC = () => {
     }
     setConnectionError(null);
   };
+
+
 
   const playAudio = async (audioData: string) => {
     if (!outAudioContextRef.current) return;
@@ -434,6 +446,7 @@ const App: React.FC = () => {
             channelCount: 1
           }
         });
+        mediaStreamRef.current = stream; // Save stream to ref
         await initAudio();
         const source = audioContextRef.current!.createMediaStreamSource(stream);
         const processor = audioContextRef.current!.createScriptProcessor(1024, 1, 1);
