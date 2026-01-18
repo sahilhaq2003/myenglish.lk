@@ -509,6 +509,63 @@ export function HomePage({ onGetStarted, onExploreCourses, onSignIn }: HomePageP
                     </div>
                 </section>
 
+                {/* Reviews Section */}
+                <section className="py-24 px-4 sm:px-6 bg-background">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4">
+                                What Our Learners Say
+                            </h2>
+                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                                Join thousands of satisfied students improving their English daily
+                            </p>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {[
+                                {
+                                    name: "Sarah J.",
+                                    role: "Student",
+                                    content: "The AI roleplay is a game changer! I feel so much more confident speaking now.",
+                                    rating: 5,
+                                    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
+                                },
+                                {
+                                    name: "Michael T.",
+                                    role: "Business Professional",
+                                    content: "Great for business English. Helped me nail my interview with a multinational company.",
+                                    rating: 5,
+                                    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
+                                },
+                                {
+                                    name: "Emily R.",
+                                    role: "Avid Traveller",
+                                    content: "I used this to prepare for my trip to London. Highly recommend for learning conversational phrases!",
+                                    rating: 5,
+                                    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
+                                }
+                            ].map((review, index) => (
+                                <div key={index} className="bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-all">
+                                    <div className="flex text-yellow-500 mb-4">
+                                        {[...Array(review.rating)].map((_, i) => (
+                                            <Star key={i} size={16} fill="currentColor" />
+                                        ))}
+                                    </div>
+                                    <p className="text-foreground mb-6 leading-relaxed">"{review.content}"</p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                                            <img src={review.image} alt={review.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-foreground">{review.name}</div>
+                                            <div className="text-sm text-muted-foreground">{review.role}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
                 {/* Pricing Section */}
                 <section id="pricing" className="py-24 px-4 sm:px-6">
                     <div className="max-w-7xl mx-auto">
