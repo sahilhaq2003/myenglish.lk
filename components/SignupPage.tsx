@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { LegalModal } from './LegalModal';
 
 export function SignupPage() {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ export function SignupPage() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [legalType, setLegalType] = useState<'privacy' | 'terms' | 'cookie' | null>(null);
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -175,8 +177,13 @@ export function SignupPage() {
             </div>
 
             <p className="mt-8 text-xs text-muted-foreground text-center">
-                By signing up, you agree to our Terms of Service and Privacy Policy.
+                By signing up, you agree to our{' '}
+                <button onClick={() => setLegalType('terms')} className="underline hover:text-primary transition-colors">Terms of Service</button>
+                {' '}and{' '}
+                <button onClick={() => setLegalType('privacy')} className="underline hover:text-primary transition-colors">Privacy Policy</button>.
             </p>
+
+            <LegalModal isOpen={!!legalType} type={legalType} onClose={() => setLegalType(null)} />
         </div>
     );
 }
