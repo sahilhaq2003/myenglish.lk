@@ -132,11 +132,15 @@ const App: React.FC = () => {
   // Sync Phase with Route to support browser navigation (Back/Forward)
   useEffect(() => {
     const path = location.pathname;
+    // Close modals and stop audio on ANY route change
+    setShowRoleplaySession(false);
+    setShowModuleSession(false);
+    setShowLessonView(false);
+    stopAudio();
+
     if (path === '/') {
       if (phase !== AppPhase.WELCOME) {
         setPhase(AppPhase.WELCOME);
-        // Clean up audio if returning home
-        stopAudio();
       }
     } else if (path === '/assessment') {
       if (phase !== AppPhase.ASSESSMENT) setPhase(AppPhase.ASSESSMENT);
